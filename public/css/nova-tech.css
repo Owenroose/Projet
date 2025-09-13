@@ -1,0 +1,424 @@
+/* Nova Tech Color Scheme */
+:root {
+    --nova-blue: #0066cc;
+    --nova-green: #00a859;
+    --nova-yellow: #ffcc00;
+    --nova-red: #e63946;
+}
+
+/* Header styles */
+.head_top {
+    background: var(--nova-blue);
+}
+
+.top-box p {
+    color: white;
+}
+
+.sociel_link li a, .sociel li a {
+    color: white;
+}
+
+.sociel_link li a:hover, .sociel li a:hover {
+    color: var(--nova-yellow);
+}
+
+/* Navigation */
+.menu-area {
+    background: white;
+}
+
+.menu-area-main li a {
+    color: #333;
+    font-weight: 500;
+}
+
+.menu-area-main li.active a,
+.menu-area-main li a:hover {
+    color: var(--nova-blue);
+}
+
+.buy {
+    background: var(--nova-green);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.buy:hover {
+    background: var(--nova-blue);
+    color: white;
+    text-decoration: none;
+}
+
+/* Slider */
+.black_bold {
+    color: #333;
+}
+
+.yellow_bold {
+    color: var(--nova-yellow);
+}
+
+.carousel-caption a {
+    background: var(--nova-green);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.carousel-caption a:hover {
+    background: var(--nova-blue);
+    text-decoration: none;
+}
+
+/* Sections */
+.title h2, .title h3 {
+    color: #333;
+}
+
+.black {
+    color: var(--nova-blue);
+}
+
+/* Service boxes */
+.for_box, .service-box, .product-box {
+    border: 1px solid #eee;
+    transition: all 0.3s;
+}
+
+.for_box:hover, .service-box:hover, .product-box:hover {
+    border-color: var(--nova-blue);
+    box-shadow: 0 5px 15px rgba(0,102,204,0.1);
+}
+
+.for_box h3, .service-box h3 {
+    color: var(--nova-blue);
+}
+
+.read-more {
+    color: var(--nova-blue);
+    font-weight: 600;
+}
+
+.read-more:hover {
+    color: var(--nova-green);
+}
+
+/* Product boxes */
+.product-box {
+    text-align: center;
+    padding: 20px;
+}
+
+.product-box h3 {
+    margin: 15px 0;
+}
+
+.product-box span {
+    color: var(--nova-red);
+    font-weight: bold;
+    font-size: 18px;
+}
+
+/* Testimonials */
+.text-bg {
+    background: #f9f9f9;
+    padding: 30px;
+    border-radius: 8px;
+}
+
+/* Quote section */
+.yellow_bg {
+    background: var(--nova-yellow);
+    padding: 30px;
+    border-radius: 8px;
+}
+
+.yellow-box h3 {
+    color: white;
+    margin-bottom: 10px;
+}
+
+.yellow-box a {
+    background: white;
+    color: var(--nova-blue);
+    padding: 12px 25px;
+    border-radius: 4px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.yellow-box a:hover {
+    background: var(--nova-blue);
+    color: white;
+    text-decoration: none;
+}
+
+/* Footer */
+.footer {
+    background: #222;
+    color: white;
+    padding: 50px 0 0;
+}
+
+.footer h3 {
+    color: var(--nova-yellow);
+    margin-bottom: 20px;
+}
+
+.footer .contact span {
+    color: #ccc;
+}
+
+.footer .lik li a {
+    color: #ccc;
+}
+
+.footer .lik li a:hover {
+    color: var(--nova-yellow);
+}
+
+.copyright {
+    background: #111;
+    padding: 15px 0;
+    text-align: center;
+    margin-top: 30px;
+}
+
+.copyright p {
+    margin: 0;
+    color: #ccc;
+}
+
+.copyright a {
+    color: var(--nova-yellow);
+}
+
+.copyright a:hover {
+    color: white;
+}
+/* Uniformisation de la hauteur des boxes */
+.whyschose {
+    padding: 50px 0;
+}
+
+.white_bg {
+    background: white;
+    padding: 40px 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 25px rgba(0,0,0,0.1);
+}
+
+.for_box {
+    text-align: center;
+    padding: 30px 20px;
+    margin-bottom: 20px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    height: 100%; /* Prend toute la hauteur disponible */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.for_box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    border-color: var(--nova-blue);
+}
+
+.for_box i {
+    margin-bottom: 20px;
+    display: block;
+    min-height: 70px; /* Hauteur fixe pour les icônes */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.for_box i img {
+    max-width: 60px;
+    height: auto;
+}
+
+.for_box h3 {
+    color: var(--nova-blue);
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    min-height: 50px; /* Hauteur fixe pour les titres */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.for_box p {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    flex-grow: 1; /* Prend l'espace disponible */
+}
+
+.read-more {
+    display: inline-block;
+    color: var(--nova-blue);
+    font-weight: 600;
+    text-decoration: none;
+    margin-top: 20px;
+    padding: 10px 20px;
+    border: 2px solid var(--nova-blue);
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+.read-more:hover {
+    background: var(--nova-blue);
+    color: white;
+}
+
+/* Ajustements responsives */
+@media (max-width: 991px) {
+    .for_box {
+        margin-bottom: 30px;
+    }
+
+    .for_box h3 {
+        min-height: auto;
+    }
+}
+
+@media (max-width: 767px) {
+    .whyschose {
+        padding: 30px 0;
+    }
+
+    .white_bg {
+        padding: 30px 20px;
+    }
+
+    .for_box {
+        padding: 20px 15px;
+    }
+}
+/* About Section Styles */
+.about-section {
+    padding: 50px 0 30px;
+    background: linear-gradient(135deg, var(--nova-blue) 0%, #004d99 100%);
+    color: white;
+}
+
+.about-section .title h2 {
+    color: white;
+}
+
+.about-section .title span {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.about-section .black {
+    color: var(--nova-yellow) !important;
+}
+
+.mission-section {
+    padding: 50px 0;
+    background-color: #f8f9fa;
+}
+
+.mission-bg {
+    background: white;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+}
+
+.about-content h3 {
+    color: var(--nova-blue);
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 25px;
+    position: relative;
+}
+
+.about-content h3:after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -10px;
+    width: 50px;
+    height: 3px;
+    background: var(--nova-green);
+}
+
+.about-content p {
+    color: #555;
+    line-height: 1.8;
+    margin-bottom: 20px;
+    font-size: 16px;
+}
+
+.about-image {
+    position: relative;
+    padding: 15px;
+}
+
+.about-image:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: 2px solid var(--nova-blue);
+    border-radius: 10px;
+    transform: rotate(3deg);
+    z-index: 1;
+}
+
+.about-image img {
+    position: relative;
+    z-index: 2;
+    border-radius: 8px;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive adjustments */
+@media (max-width: 991px) {
+    .mission-bg {
+        padding: 30px;
+    }
+
+    .about-content h3 {
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 767px) {
+    .about-section {
+        padding: 40px 0 20px;
+    }
+
+    .mission-section {
+        padding: 30px 0;
+    }
+
+    .mission-bg {
+        padding: 20px;
+    }
+
+    .about-image {
+        margin-top: 30px;
+    }
+
+    .about-content h3 {
+        text-align: center;
+    }
+
+    .about-content h3:after {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}

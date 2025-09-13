@@ -1,0 +1,286 @@
+/* Custom styles for Nova Tech Benin */
+:root {
+    --nova-blue: #0066cc;
+    --nova-green: #00a859;
+    --nova-yellow: #ffcc00;
+    --nova-red: #e63946;
+    --nova-dark: #2d3748;
+    --nova-light: #f8f9fa;
+}
+
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, var(--nova-blue) 0%, #004d99 100%);
+}
+
+/* Service Cards */
+.service-card {
+    transition: transform 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.service-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--nova-blue);
+    box-shadow: 0 10px 25px rgba(0,102,204,0.1);
+}
+
+/* Project Cards */
+.project-card {
+    transition: transform 0.3s ease;
+    overflow: hidden;
+    border: 1px solid #e9ecef;
+}
+
+.project-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--nova-green);
+    box-shadow: 0 10px 25px rgba(0,168,89,0.1);
+}
+
+.project-card img {
+    transition: transform 0.5s ease;
+}
+
+.project-card:hover img {
+    transform: scale(1.05);
+}
+
+/* Process Steps */
+.process-step .step-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    background: linear-gradient(135deg, var(--nova-blue) 0%, var(--nova-green) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.process-step .step-icon i {
+    font-size: 2rem;
+}
+
+/* Page Header */
+.page-header {
+    background: linear-gradient(135deg, var(--nova-blue) 0%, #004d99 100%);
+}
+
+/* Map Container */
+.map-container {
+    border-radius: 0.375rem;
+    overflow: hidden;
+    border: 2px solid var(--nova-blue);
+}
+
+/* Custom buttons */
+.btn-primary {
+    background-color: var(--nova-blue);
+    border-color: var(--nova-blue);
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+.btn-success {
+    background-color: var(--nova-green);
+    border-color: var(--nova-green);
+}
+
+.btn-success:hover {
+    background-color: #008a4a;
+    border-color: #008a4a;
+}
+
+.btn-warning {
+    background-color: var(--nova-yellow);
+    border-color: var(--nova-yellow);
+    color: var(--nova-dark);
+}
+
+.btn-warning:hover {
+    background-color: #e6b800;
+    border-color: #e6b800;
+    color: var(--nova-dark);
+}
+
+.btn-danger {
+    background-color: var(--nova-red);
+    border-color: var(--nova-red);
+}
+
+.btn-danger:hover {
+    background-color: #d32f2f;
+    border-color: #d32f2f;
+}
+
+/* Custom badges */
+.badge.bg-nova-blue {
+    background-color: var(--nova-blue) !important;
+}
+
+.badge.bg-nova-green {
+    background-color: var(--nova-green) !important;
+}
+
+.badge.bg-nova-yellow {
+    background-color: var(--nova-yellow) !important;
+    color: var(--nova-dark);
+}
+
+.badge.bg-nova-red {
+    background-color: var(--nova-red) !important;
+}
+
+/* Text colors */
+.text-nova-blue {
+    color: var(--nova-blue) !important;
+}
+
+.text-nova-green {
+    color: var(--nova-green) !important;
+}
+
+.text-nova-yellow {
+    color: var(--nova-yellow) !important;
+}
+
+.text-nova-red {
+    color: var(--nova-red) !important;
+}
+
+/* Background colors */
+.bg-nova-blue {
+    background-color: var(--nova-blue) !important;
+}
+
+.bg-nova-green {
+    background-color: var(--nova-green) !important;
+}
+
+.bg-nova-yellow {
+    background-color: var(--nova-yellow) !important;
+}
+
+.bg-nova-red {
+    background-color: var(--nova-red) !important;
+}
+
+/* Navigation enhancements */
+.navbar-dark .navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+    color: white;
+}
+
+.navbar-dark .navbar-nav .nav-link.active {
+    color: white;
+    font-weight: 600;
+}
+
+/* Card enhancements */
+.card {
+    border: 1px solid rgba(0,0,0,0.125);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Form enhancements */
+.form-control:focus {
+    border-color: var(--nova-blue);
+    box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.25);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hero-section .display-4 {
+        font-size: 2.5rem;
+    }
+
+    .process-step .step-icon {
+        width: 60px;
+        height: 60px;
+    }
+
+    .process-step .step-icon i {
+        font-size: 1.5rem !important;
+    }
+
+    .navbar-brand img {
+        max-height: 40px;
+    }
+}
+
+/* Animation utilities */
+.fade-in {
+    animation: fadeIn 0.6s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-in-left {
+    animation: slideInLeft 0.6s ease-out;
+}
+
+@keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.slide-in-right {
+    animation: slideInRight 0.6s ease-out;
+}
+
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* Loading animation */
+.loading-spinner {
+    width: 3rem;
+    height: 3rem;
+    border: 0.25em solid var(--nova-blue);
+    border-right-color: transparent;
+}
+
+/* Back to top button */
+.back-to-top {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: var(--nova-blue);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.back-to-top.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.back-to-top:hover {
+    background-color: var(--nova-green);
+    transform: translateY(-3px);
+}

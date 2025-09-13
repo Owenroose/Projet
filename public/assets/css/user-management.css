@@ -1,0 +1,401 @@
+
+/* CSS personnalisé pour la gestion des utilisateurs */
+
+/* Variables CSS */
+:root {
+    --primary-color: #696cff;
+    --success-color: #71dd37;
+    --warning-color: #ffab00;
+    --danger-color: #ff3e1d;
+    --info-color: #03c3ec;
+    --border-radius: 6px;
+    --box-shadow: 0 2px 6px 0 rgba(67, 89, 113, 0.12);
+    --transition: all 0.15s ease-in-out;
+}
+
+/* Animations personnalisées */
+@keyframes slideInUp {
+    from {
+        transform: translate3d(0, 100%, 0);
+        visibility: visible;
+    }
+    to {
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(105, 108, 255, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(105, 108, 255, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(105, 108, 255, 0);
+    }
+}
+
+/* Classes d'animation */
+.animate-slide-in-up {
+    animation: slideInUp 0.3s ease-out;
+}
+
+.animate-fade-in-scale {
+    animation: fadeInScale 0.2s ease-out;
+}
+
+.animate-pulse {
+    animation: pulse 2s infinite;
+}
+
+/* Améliorations de l'interface */
+.user-card {
+    transition: var(--transition);
+    border: 1px solid rgba(67, 89, 113, 0.12);
+}
+
+.user-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px 0 rgba(67, 89, 113, 0.16);
+}
+
+/* Statuts utilisateur */
+.status-online {
+    position: relative;
+}
+
+.status-online::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 12px;
+    height: 12px;
+    background-color: var(--success-color);
+    border-radius: 50%;
+    border: 2px solid white;
+    z-index: 1;
+}
+
+.status-online::before {
+    animation: pulse 2s infinite;
+}
+
+/* Avatar amélioré */
+.avatar-enhanced {
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.avatar-enhanced:hover {
+    transform: scale(1.1);
+}
+
+.avatar-enhanced img {
+    transition: var(--transition);
+}
+
+.avatar-enhanced:hover img {
+    transform: scale(1.2);
+}
+
+/* Badges rôles */
+.role-badge {
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.role-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--box-shadow);
+}
+
+.role-badge::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.role-badge:hover::before {
+    left: 100%;
+}
+
+/* Actions en lot améliorées */
+.bulk-actions-container {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-left: 4px solid var(--primary-color);
+    position: relative;
+    overflow: hidden;
+}
+
+.bulk-actions-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary-color), var(--info-color));
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+}
+
+/* Tableau amélioré */
+.table-enhanced {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table-enhanced thead th {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: none;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.table-enhanced tbody tr {
+    transition: var(--transition);
+}
+
+.table-enhanced tbody tr:hover {
+    background-color: rgba(105, 108, 255, 0.04);
+    transform: scale(1.01);
+}
+
+.table-enhanced td {
+    border-top: 1px solid rgba(67, 89, 113, 0.12);
+    vertical-align: middle;
+}
+
+/* Filtres avancés */
+.filter-dropdown {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.filter-dropdown::-webkit-scrollbar {
+    width: 4px;
+}
+
+.filter-dropdown::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 2px;
+}
+
+.filter-dropdown::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 2px;
+}
+
+/* Modal amélioré */
+.modal-enhanced .modal-content {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.16);
+    overflow: hidden;
+}
+
+.modal-enhanced .modal-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #5a5fcf 100%);
+    color: white;
+    border: none;
+}
+
+.modal-enhanced .modal-header .btn-close {
+    filter: invert(1);
+}
+
+.modal-enhanced .modal-body {
+    padding: 2rem;
+}
+
+.modal-enhanced .modal-footer {
+    background-color: #f8f9fa;
+    border: none;
+}
+
+/* Statistiques */
+.stat-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-color), var(--info-color));
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(67, 89, 113, 0.16);
+}
+
+.stat-card .stat-icon {
+    transition: var(--transition);
+}
+
+.stat-card:hover .stat-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+/* Notifications toast */
+.toast-container {
+    z-index: 1055;
+}
+
+.toast-success {
+    border-left: 4px solid var(--success-color);
+}
+
+.toast-error {
+    border-left: 4px solid var(--danger-color);
+}
+
+.toast-warning {
+    border-left: 4px solid var(--warning-color);
+}
+
+.toast-info {
+    border-left: 4px solid var(--info-color);
+}
+
+/* Formulaires */
+.form-enhanced .form-control {
+    border-radius: var(--border-radius);
+    border: 1px solid #d9dee3;
+    transition: var(--transition);
+}
+
+.form-enhanced .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(105, 108, 255, 0.25);
+}
+
+.form-enhanced .form-select {
+    border-radius: var(--border-radius);
+}
+
+/* Boutons personnalisés */
+.btn-enhanced {
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.btn-enhanced::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn-enhanced:hover::before {
+    left: 100%;
+}
+
+.btn-enhanced:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Loading states */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .stat-card {
+        margin-bottom: 1rem;
+    }
+
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+
+    .modal-enhanced .modal-body {
+        padding: 1rem;
+    }
+
+    .bulk-actions-container {
+        padding: 0.75rem;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-color: #2b2c40;
+        --text-color: #a7a9c2;
+        --border-color: #444564;
+    }
+
+    .stat-card {
+        background: var(--bg-color);
+        color: var(--text-color);
+    }
+
+    .table-enhanced tbody tr:hover {
+        background-color: rgba(105, 108, 255, 0.08);
+    }
+}

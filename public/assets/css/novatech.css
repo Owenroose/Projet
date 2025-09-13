@@ -1,0 +1,131 @@
+/*
+ * Custom styles for Nova Tech Benin Dashboard
+ *
+ * @author Nova Tech Benin
+ * @version 1.0.0
+ */
+
+/* General Styles */
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+/* Nova Tech Branding Colors */
+.bg-nova-primary {
+  background: linear-gradient(135deg, #0077b6 0%, #2d6a4f 100%) !important;
+}
+
+.text-nova-primary {
+  color: #0077b6 !important;
+}
+
+/* App Brand Logo */
+.app-brand-logo-container {
+  background: linear-gradient(135deg, #0077b6 0%, #2d6a4f 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  position: relative;
+}
+
+.app-brand-logo-container svg {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+
+.logo-white-shape {
+  fill: #ffffff;
+}
+
+.logo-letter {
+  fill: #0077b6;
+}
+
+.logo-benin-green {
+  fill: #2d6a4f;
+}
+
+.logo-benin-yellow {
+  fill: #fbb040;
+}
+
+.logo-benin-red {
+  fill: #d9534f;
+}
+
+/* AI Assistant Section */
+.ai-assistant-section {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-radius: 12px;
+  padding: 2rem;
+  margin: 2rem 0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.ai-button {
+  background: linear-gradient(135deg, #0077b6 0%, #2d6a4f 100%);
+  transition: all 0.3s ease;
+  border: none;
+  border-radius: 25px;
+  padding: 12px 24px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ai-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 119, 182, 0.3);
+}
+
+.ai-textarea {
+  border-radius: 12px;
+  border: 2px solid #e2e8f0;
+  transition: all 0.3s ease;
+  resize: none;
+}
+
+.ai-textarea:focus {
+  border-color: #0077b6;
+  box-shadow: 0 0 0 3px rgba(0, 119, 182, 0.1);
+  outline: none;
+}
+
+.ai-response {
+  background: white;
+  border-radius: 12px;
+  border-left: 4px solid #0077b6;
+  padding: 1.5rem;
+  margin-top: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Animations */
+#loading-spinner {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #0077b6;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  margin-right: 10px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
