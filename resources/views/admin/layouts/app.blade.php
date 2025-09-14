@@ -96,8 +96,7 @@
                             <i class="menu-icon tf-icons bx bx-shopping-bag"></i>
                             <div data-i18n="Orders">Commandes</div>
                             @php
-                                $pendingOrdersCount = \App\Models\Order::where('status', 'pending')->count();
-                                $priorityOrdersCount = \App\Models\Order::where('is_priority', true)->count();
+                                $pendingOrdersCount = \App\Models\Order::select('order_group')->distinct()->where('status', 'pending')->count();
                             @endphp
                             @if($pendingOrdersCount > 0)
                                 <span class="badge bg-warning rounded-pill ms-auto">{{ $pendingOrdersCount }}</span>
@@ -137,14 +136,6 @@
                                     <div data-i18n="Delivered Orders">Livrées</div>
                                 </a>
                             </li>
-                            @if($priorityOrdersCount > 0)
-                                <li class="menu-item">
-                                    <a href="{{ route('admin.orders.index') }}?priority=true" class="menu-link">
-                                        <div data-i18n="Priority Orders">Prioritaires</div>
-                                        <span class="badge bg-danger rounded-pill ms-auto">{{ $priorityOrdersCount }}</span>
-                                    </a>
-                                </li>
-                            @endif
                         </ul>
                     </li>
 

@@ -161,14 +161,15 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
         Route::get('/{order}', 'show')->name('show');
         Route::delete('/{order}', 'destroy')->name('destroy');
 
-        // Actions AJAX
-        Route::patch('/{order}/status', 'updateStatus')->name('update-status');
+        // Actions AJAX - CORRECTION ICI
+        Route::post('/update-status', 'updateStatus')->name('updateStatus'); // Route sans paramètre
         Route::post('/{order}/note', 'addNote')->name('add-note');
         Route::patch('/{order}/priority', 'togglePriority')->name('toggle-priority');
 
         // Recherche et rapports
         Route::get('/search/autocomplete', 'searchAutocomplete')->name('search-autocomplete');
         Route::post('/generate-report', 'generateReport')->name('generate-report');
+        Route::post('/export', 'export')->name('export'); // Ajout de la route export
     });
 
     // Routes pour les rôles

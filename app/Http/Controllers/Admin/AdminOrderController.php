@@ -8,6 +8,7 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class AdminOrderController extends Controller
 {
@@ -16,293 +17,384 @@ class AdminOrderController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Order::with(['product'])->latest();
+        // Récupération des order_group uniques avec les informations de la première commande du groupe
+        $orderGroupsQuery = DB::table('orders')
+            ->select(
+                'order_group',
+                DB::raw('MIN(id) as first_order_id'),
+                DB::raw('MAX(customer_name) as customer_name'),
+                DB::raw('MAX(customer_email) as customer_email'),
+                DB::raw('MAX(customer_phone) as customer_phone'),
+                DB::raw('MAX(customer_city) as customer_city'),
+                DB::raw('MAX(customer_address) as customer_address'),
+                DB::raw('MAX(total_amount) as total_amount'),
+                DB::raw('MAX(status) as status'),
+                DB::raw('MAX(payment_status) as payment_status'),
+                DB::raw('SUM(quantity) as total_items'),
+                DB::raw('MIN(created_at) as created_at'),
+                DB::raw('MAX(updated_at) as updated_at')
+            )
+            ->groupBy('order_group')
+            ->orderBy('created_at', 'desc');
 
         // Filtres
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $orderGroupsQuery->having('status', $request->status);
+        }
+
+        if ($request->filled('payment_status')) {
+            $orderGroupsQuery->having('payment_status', $request->payment_status);
         }
 
         if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
+            $orderGroupsQuery->havingRaw('DATE(created_at) >= ?', [$request->date_from]);
         }
 
         if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
+            $orderGroupsQuery->havingRaw('DATE(created_at) <= ?', [$request->date_to]);
         }
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhereHas('product', function($productQuery) use ($search) {
-                      $productQuery->where('name', 'like', "%{$search}%");
-                  });
-            });
+            $orderGroupsQuery->havingRaw('(customer_name LIKE ? OR customer_email LIKE ? OR customer_phone LIKE ?)',
+                ["%{$search}%", "%{$search}%", "%{$search}%"]);
         }
 
-        $orders = $query->paginate(15)->withQueryString();
+        // Pagination
+        $perPage = 15;
+        $page = $request->get('page', 1);
+        $total = $orderGroupsQuery->get()->count();
+        $orders = $orderGroupsQuery->offset(($page - 1) * $perPage)->limit($perPage)->get();
+
+        // Créer l'objet de pagination
+        $orders = new \Illuminate\Pagination\LengthAwarePaginator(
+            $orders,
+            $total,
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
+        // Pour chaque groupe de commande, récupérer les détails des produits
+        $orders->getCollection()->transform(function ($orderGroup) {
+            $orderGroup->items = Order::where('order_group', $orderGroup->order_group)
+                ->with('product')
+                ->get();
+
+            // Calculer le montant total des produits (sans frais de livraison)
+            $orderGroup->products_total = $orderGroup->items->sum('subtotal');
+            $orderGroup->shipping_fee = $orderGroup->items->first()->shipping_fee ?? 0;
+
+            return $orderGroup;
+        });
 
         // Statistiques
-        $stats = [
-            'total' => Order::count(),
-            'pending' => Order::where('status', 'pending')->count(),
-            'processing' => Order::where('status', 'processing')->count(),
-            'shipped' => Order::where('status', 'shipped')->count(),
-            'delivered' => Order::where('status', 'delivered')->count(),
-            'cancelled' => Order::where('status', 'cancelled')->count(),
-            'today' => Order::whereDate('created_at', today())->count(),
-            'this_month' => Order::whereMonth('created_at', now()->month)->count(),
-            'total_revenue' => Order::whereIn('status', ['delivered', 'shipped', 'processing'])->sum('total_price')
-        ];
+        $stats = $this->getOrderStats();
 
         return view('admin.orders.index', compact('orders', 'stats'));
     }
 
     /**
-     * Affiche les détails d'une commande
+     * Affiche le tableau de bord des commandes
      */
-    public function show(Order $order)
+    public function dashboard()
     {
-        $order->load(['product']);
-        return view('admin.orders.show', compact('order'));
-    }
+        // Statistiques
+        $stats = $this->getOrderStats();
 
-    /**
-     * Met à jour le statut d'une commande
-     */
-    public function updateStatus(Request $request, Order $order)
-    {
-        $request->validate([
-            'status' => 'required|in:pending,processing,shipped,delivered,cancelled'
-        ]);
+        // Commandes récentes (groupées par order_group)
+        $recentOrderGroups = DB::table('orders')
+            ->select(
+                'order_group',
+                DB::raw('MAX(customer_name) as customer_name'),
+                DB::raw('MAX(customer_email) as customer_email'),
+                DB::raw('MAX(total_amount) as total_amount'),
+                DB::raw('MAX(status) as status'),
+                DB::raw('MAX(payment_status) as payment_status'),
+                DB::raw('MIN(created_at) as created_at')
+            )
+            ->groupBy('order_group')
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
 
-        $oldStatus = $order->status;
-        $order->update([
-            'status' => $request->status,
-            'status_updated_at' => now()
-        ]);
+        $recentOrders = collect($recentOrderGroups)->map(function($orderGroup) {
+            $orderGroup->items = Order::where('order_group', $orderGroup->order_group)
+                ->with('product')
+                ->get();
+            return $orderGroup;
+        });
 
-        // Log de l'action
-        Log::info("Commande #{$order->id} - Statut changé de '{$oldStatus}' vers '{$request->status}' par " . auth()->user()->name);
+        // Données du graphique (Commandes par mois) - basé sur order_group uniques
+        $ordersByMonth = DB::table('orders')
+            ->selectRaw('MONTH(created_at) as month, COUNT(DISTINCT order_group) as count')
+            ->whereYear('created_at', Carbon::now()->year)
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Statut de la commande mis à jour avec succès',
-            'new_status' => $request->status
-        ]);
-    }
-
-    /**
-     * Ajoute des notes à une commande
-     */
-    public function addNote(Request $request, Order $order)
-    {
-        $request->validate([
-            'content' => 'required|string|max:1000'
-        ]);
-
-        // Récupère les notes existantes ou initialise un tableau vide
-        $notes = json_decode($order->notes, true) ?? [];
-        $notes[] = [
-            'content' => $request->content,
-            'author' => auth()->user()->name,
-            'created_at' => now()->toDateTimeString()
+        $chartData = [
+            'labels' => [],
+            'data' => []
         ];
 
-        $order->update(['notes' => json_encode($notes)]);
+        $months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Note ajoutée avec succès'
-        ]);
+        // Initialiser tous les mois avec 0
+        for ($i = 1; $i <= 12; $i++) {
+            $chartData['labels'][] = $months[$i - 1];
+            $chartData['data'][] = 0;
+        }
+
+        // Remplir avec les données réelles
+        foreach ($ordersByMonth as $order) {
+            $chartData['data'][$order->month - 1] = $order->count;
+        }
+
+        // Données du graphique circulaire - basé sur order_group uniques
+        $statusCounts = DB::table('orders')
+            ->select('status', DB::raw('COUNT(DISTINCT order_group) as count'))
+            ->groupBy('status')
+            ->get();
+
+        $statusLabels = [];
+        $statusData = [];
+        $statusColors = [];
+        $colorMap = [
+            'pending' => '#ffc107',
+            'processing' => '#17a2b8',
+            'shipped' => '#28a745',
+            'delivered' => '#007bff',
+            'cancelled' => '#dc3545',
+        ];
+
+        foreach ($statusCounts as $status) {
+            $statusLabels[] = $this->getStatusLabel($status->status);
+            $statusData[] = $status->count;
+            $statusColors[] = $colorMap[$status->status] ?? '#6c757d';
+        }
+
+        $statusPieChartData = [
+            'labels' => $statusLabels,
+            'data' => $statusData,
+            'colors' => $statusColors
+        ];
+
+        return view('admin.orders.dashboard', compact('stats', 'recentOrders', 'chartData', 'statusPieChartData'));
     }
 
     /**
-     * Marque une commande comme prioritaire
+     * Affiche les détails d'un groupe de commande
      */
-    public function togglePriority(Order $order)
+    public function show($orderGroup)
     {
-        $order->update([
-            'is_priority' => !$order->is_priority
-        ]);
+        $orders = Order::where('order_group', $orderGroup)->with('product')->get();
 
-        return response()->json([
-            'success' => true,
-            'is_priority' => $order->is_priority,
-            'message' => $order->is_priority ? 'Commande marquée comme prioritaire' : 'Priorité supprimée'
-        ]);
+        if ($orders->isEmpty()) {
+            abort(404, 'Commande non trouvée.');
+        }
+
+        // Informations générales de la commande
+        $orderInfo = $orders->first();
+
+        // Calculer les totaux
+        $productsTotal = $orders->sum('subtotal');
+        $shippingFee = $orderInfo->shipping_fee;
+        $totalAmount = $orderInfo->total_amount;
+
+        return view('admin.orders.show', compact('orders', 'orderInfo', 'productsTotal', 'shippingFee', 'totalAmount'));
     }
 
     /**
-     * Supprime une commande
+     * Met à jour le statut d'une ou plusieurs commandes.
      */
-    public function destroy(Order $order)
+    public function updateStatus(Request $request)
     {
-        $orderNumber = $order->id;
-        $order->delete();
+        $request->validate([
+            'order_groups' => 'required|array',
+            'status' => 'required|string|in:pending,processing,shipped,delivered,cancelled',
+        ]);
 
-        return redirect()->route('admin.orders.index')
-                        ->with('success', "Commande #{$orderNumber} supprimée avec succès");
+        $orderGroups = $request->input('order_groups');
+        $newStatus = $request->input('status');
+
+        try {
+            DB::beginTransaction();
+
+            $updated = Order::whereIn('order_group', $orderGroups)->update([
+                'status' => $newStatus,
+                'updated_at' => now()
+            ]);
+
+            DB::commit();
+
+            Log::info("Statut des commandes mis à jour", [
+                'order_groups' => $orderGroups,
+                'new_status' => $newStatus,
+                'updated_count' => $updated
+            ]);
+
+            return response()->json([
+                'message' => "Statut de {$updated} commande(s) mis à jour avec succès."
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Erreur lors de la mise à jour des statuts de commande: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Une erreur est survenue lors de la mise à jour des statuts.'
+            ], 500);
+        }
     }
 
     /**
-     * Génère un rapport des commandes
+     * Supprime un groupe de commande et ses articles.
      */
-    public function generateReport(Request $request)
+    public function destroy($orderGroup)
+    {
+        try {
+            DB::beginTransaction();
+
+            $deleted = Order::where('order_group', $orderGroup)->delete();
+
+            DB::commit();
+
+            Log::info("Commande supprimée", [
+                'order_group' => $orderGroup,
+                'deleted_count' => $deleted
+            ]);
+
+            return response()->json([
+                'message' => 'Commande supprimée avec succès.'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Erreur lors de la suppression de la commande: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Une erreur est survenue lors de la suppression de la commande.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Exporte les commandes en fichier CSV.
+     */
+    public function export(Request $request)
     {
         $request->validate([
             'date_from' => 'required|date',
             'date_to' => 'required|date|after_or_equal:date_from',
-            'format' => 'required|in:excel,pdf'
         ]);
 
-        $orders = Order::with('product')
-                      ->whereBetween('created_at', [
-                          $request->date_from . ' 00:00:00',
-                          $request->date_to . ' 23:59:59'
-                      ])
-                      ->get();
+        // Récupérer les groupes de commandes dans la période spécifiée
+        $orderGroups = DB::table('orders')
+            ->select(
+                'order_group',
+                DB::raw('MAX(customer_name) as customer_name'),
+                DB::raw('MAX(customer_email) as customer_email'),
+                DB::raw('MAX(customer_phone) as customer_phone'),
+                DB::raw('MAX(customer_city) as customer_city'),
+                DB::raw('MAX(total_amount) as total_amount'),
+                DB::raw('MAX(status) as status'),
+                DB::raw('MAX(payment_status) as payment_status'),
+                DB::raw('MIN(created_at) as created_at')
+            )
+            ->whereBetween('created_at', [$request->date_from . ' 00:00:00', $request->date_to . ' 23:59:59'])
+            ->groupBy('order_group')
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-        if ($request->format === 'excel') {
-            return $this->exportToExcel($orders, $request->date_from, $request->date_to);
-        } else {
-            return $this->exportToPDF($orders, $request->date_from, $request->date_to);
-        }
+        return $this->exportToExcel($orderGroups, $request->date_from, $request->date_to);
     }
 
     /**
-     * Recherche automatique pour l'autocomplete
+     * Génère les statistiques des commandes
      */
-    public function searchAutocomplete(Request $request)
+    private function getOrderStats()
     {
-        $term = $request->get('term', '');
+        $totalOrderGroups = DB::table('orders')->distinct('order_group')->count();
+        $totalSales = DB::table('orders')->sum('total_amount');
+        $pendingOrders = DB::table('orders')->where('status', 'pending')->distinct('order_group')->count();
+        $priorityOrders = DB::table('orders')->whereIn('status', ['pending', 'processing'])->distinct('order_group')->count();
 
-        if (strlen($term) < 2) {
-            return response()->json([]);
-        }
-
-        $orders = Order::with('product')
-                      ->where(function($query) use ($term) {
-                          $query->where('name', 'like', "%{$term}%")
-                                ->orWhere('email', 'like', "%{$term}%")
-                                ->orWhere('phone', 'like', "%{$term}%")
-                                ->orWhereHas('product', function($q) use ($term) {
-                                    $q->where('name', 'like', "%{$term}%");
-                                });
-                      })
-                      ->limit(10)
-                      ->get();
-
-        $suggestions = $orders->map(function($order) {
-            return [
-                'id' => $order->id,
-                'label' => "#{$order->id} - {$order->name} - {$order->product->name}",
-                'value' => $order->name,
-                'url' => route('admin.orders.show', $order)
-            ];
-        });
-
-        return response()->json($suggestions);
+        return [
+            'totalOrders' => $totalOrderGroups,
+            'totalSales' => $totalSales,
+            'pendingOrders' => $pendingOrders,
+            'priorityOrders' => $priorityOrders
+        ];
     }
 
     /**
-     * Exporte les données vers Excel (exemple de structure)
+     * Retourne le libellé français du statut
      */
-
-
-    /**
-     * Dashboard des commandes avec statistiques avancées
-     */
-    public function dashboard()
+    private function getStatusLabel($status)
     {
-        $today = Carbon::today();
-        $thisWeek = Carbon::now()->startOfWeek();
-        $thisMonth = Carbon::now()->startOfMonth();
-
-        $stats = [
-            // Commandes par période
-            'today' => [
-                'count' => Order::whereDate('created_at', $today)->count(),
-                'revenue' => Order::whereDate('created_at', $today)->sum('total_price')
-            ],
-            'week' => [
-                'count' => Order::where('created_at', '>=', $thisWeek)->count(),
-                'revenue' => Order::where('created_at', '>=', $thisWeek)->sum('total_price')
-            ],
-            'month' => [
-                'count' => Order::where('created_at', '>=', $thisMonth)->count(),
-                'revenue' => Order::where('created_at', '>=', $thisMonth)->sum('total_price')
-            ],
-
-            // Commandes par statut
-            'by_status' => [
-                'pending' => Order::where('status', 'pending')->count(),
-                'processing' => Order::where('status', 'processing')->count(),
-                'shipped' => Order::where('status', 'shipped')->count(),
-                'delivered' => Order::where('status', 'delivered')->count(),
-                'cancelled' => Order::where('status', 'cancelled')->count(),
-            ],
-
-            // Commandes prioritaires
-            'priority' => Order::where('is_priority', true)->count(),
-
-            // Revenus total
-            'total_revenue' => Order::whereIn('status', ['delivered', 'shipped', 'processing'])->sum('total_price')
+        $labels = [
+            'pending' => 'En attente',
+            'processing' => 'En traitement',
+            'shipped' => 'Expédiée',
+            'delivered' => 'Livrée',
+            'cancelled' => 'Annulée',
         ];
 
-        // Commandes récentes
-        $recentOrders = Order::with('product')->latest()->limit(5)->get();
-
-        // Graphique des commandes par jour (7 derniers jours)
-        $chartData = [];
-        for ($i = 6; $i >= 0; $i--) {
-            $date = Carbon::now()->subDays($i);
-            $chartData[] = [
-                'date' => $date->format('d/m'),
-                'orders' => Order::whereDate('created_at', $date)->count(),
-                'revenue' => Order::whereDate('created_at', $date)->sum('total_price')
-            ];
-        }
-
-        return view('admin.orders.dashboard', compact('stats', 'recentOrders', 'chartData'));
+        return $labels[$status] ?? ucfirst($status);
     }
 
-        private function exportToExcel($orders, $dateFrom, $dateTo)
+    /**
+     * Exporte les données vers un fichier CSV
+     */
+    private function exportToExcel($orderGroups, $dateFrom, $dateTo)
     {
-        // Ici vous pouvez utiliser Laravel Excel ou une autre bibliothèque
-        // Pour l'exemple, on retourne un CSV simple
-
         $filename = "commandes_{$dateFrom}_au_{$dateTo}.csv";
         $headers = [
-            'Content-Type' => 'text/csv',
+            'Content-Type' => 'text/csv; charset=utf-8',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ];
 
-        $callback = function() use ($orders) {
+        $callback = function() use ($orderGroups) {
             $file = fopen('php://output', 'w');
+
+            // BOM pour UTF-8
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
 
             // En-têtes CSV
             fputcsv($file, [
-                'ID', 'Client', 'Email', 'Téléphone', 'Produit',
-                'Quantité', 'Prix Total', 'Statut', 'Date de commande'
-            ]);
+                'ID de groupe',
+                'Client',
+                'Email',
+                'Téléphone',
+                'Ville',
+                'Produits',
+                'Quantité totale',
+                'Prix Total',
+                'Statut commande',
+                'Statut paiement',
+                'Date de commande'
+            ], ';');
 
             // Données
-            foreach ($orders as $order) {
+            foreach ($orderGroups as $orderGroup) {
+                // Récupérer les détails des produits pour ce groupe
+                $orderItems = Order::where('order_group', $orderGroup->order_group)
+                    ->with('product')
+                    ->get();
+
+                $productNames = $orderItems->pluck('product.name')->implode(', ');
+                $totalQuantity = $orderItems->sum('quantity');
+
                 fputcsv($file, [
-                    $order->id,
-                    $order->name,
-                    $order->email,
-                    $order->phone,
-                    $order->product->name,
-                    $order->quantity,
-                    number_format($order->total_price, 0, ',', ' ') . ' FCFA',
-                    ucfirst($order->status),
-                    $order->created_at->format('d/m/Y H:i')
-                ]);
+                    $orderGroup->order_group,
+                    $orderGroup->customer_name,
+                    $orderGroup->customer_email ?? '',
+                    $orderGroup->customer_phone,
+                    $orderGroup->customer_city,
+                    $productNames,
+                    $totalQuantity,
+                    number_format($orderGroup->total_amount, 0, ',', ' ') . ' FCFA',
+                    $this->getStatusLabel($orderGroup->status),
+                    ucfirst($orderGroup->payment_status ?? 'pending'),
+                    Carbon::parse($orderGroup->created_at)->format('d/m/Y H:i')
+                ], ';');
             }
 
             fclose($file);

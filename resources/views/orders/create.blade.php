@@ -245,19 +245,19 @@
                                 <i class="fas fa-truck text-indigo-600 text-2xl mr-3"></i>
                                 <h3 class="text-lg font-bold text-gray-900">Informations de livraison</h3>
                             </div>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                                 <div class="flex items-center">
                                     <i class="fas fa-gift text-emerald-500 mr-2"></i>
                                     <div>
-                                        <p class="font-semibold">Livraison Offerte</p>
-                                        <p class="text-gray-600">Dès 2 000 CFA</p>
+                                        <p class="font-semibold">Livraison Gratuite</p>
+                                        <p class="text-gray-600">Commandes < 50 000 CFA</p>
                                     </div>
                                 </div>
                                 <div class="flex items-center">
-                                    <i class="fas fa-percent text-amber-500 mr-2"></i>
+                                    <i class="fas fa-truck text-amber-500 mr-2"></i>
                                     <div>
-                                        <p class="font-semibold">-50% Livraison</p>
-                                        <p class="text-gray-600">Dès 50 000 CFA</p>
+                                        <p class="font-semibold">Frais selon la ville</p>
+                                        <p class="text-gray-600">Commandes ≥ 50 000 CFA</p>
                                     </div>
                                 </div>
                                 <div class="flex items-center">
@@ -265,6 +265,13 @@
                                     <div>
                                         <p class="font-semibold">24-48h</p>
                                         <p class="text-gray-600">Délai de livraison</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-map-marker-alt text-purple-500 mr-2"></i>
+                                    <div>
+                                        <p class="font-semibold">Plusieurs villes</p>
+                                        <p class="text-gray-600">Cotonou, Calavi, Porto-Novo...</p>
                                     </div>
                                 </div>
                             </div>
@@ -429,17 +436,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /**
-     * Calcule les frais de livraison selon le total et la ville (logique identique au contrôleur)
+     * Calcule les frais de livraison selon le contrôleur PHP
+     * LOGIQUE EXACTE : Livraison gratuite pour commandes < 50 000 CFA
      */
     function calculateShippingFee(baseFee, orderTotal) {
-        if (orderTotal >= 200000) { // 200 000 CFA et plus
-            return { fee: 0, status: 'Offerte', class: 'shipping-free' };
-        } else if (orderTotal >= 50000) { // 50 000 CFA et plus
-            return { fee: Math.floor(baseFee / 2), status: '-50%', class: 'shipping-half' };
-        } else if (orderTotal >= 2000) { // 2 000 CFA et plus (mais moins de 50 000)
-            return { fee: 0, status: 'Offerte', class: 'shipping-free' };
+        if (orderTotal < 50000) {
+            // Livraison gratuite pour les commandes inférieures à 50 000 CFA
+            return { fee: 0, status: 'Gratuite', class: 'shipping-free' };
         } else {
-            return { fee: baseFee, status: 'Standard', class: 'shipping-full' };
+            // Application des frais normaux pour les commandes de 50 000 CFA et plus
+            return { fee: baseFee, status: 'Payante', class: 'shipping-full' };
         }
     }
 
@@ -579,7 +585,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /**
-     * Soumission du formulaire principal
+     * Soumission du formulaire principal avec gestion complète
      */
     if (form) {
         form.addEventListener('submit', function(e) {
@@ -614,6 +620,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
+            // Validation de l'email s'il est fourni
+            const email = document.getElementById('email').value.trim();
+            if (email && !isValidEmail(email)) {
+                document.getElementById('email').focus();
+                showMessage('Veuillez saisir un email valide');
+                return;
+            }
+
             // Interface de chargement
             if (submitButton) {
                 submitButton.disabled = true;
@@ -622,68 +636,42 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             if (loadingOverlay) loadingOverlay.classList.remove('hidden');
 
-            // Préparation des données
+            // Préparation des données du formulaire
             const formData = new FormData(form);
-            const data = {};
 
-            // Conversion FormData en objet avec gestion des arrays
-            formData.forEach((value, key) => {
-                if (key.includes('[') && key.includes(']')) {
-                    const match = key.match(/(.+)\[(.+)\]/);
-                    if (match) {
-                        const arrayName = match[1];
-                        const arrayKey = match[2];
-                        if (!data[arrayName]) {
-                            data[arrayName] = {};
-                        }
-                        data[arrayName][arrayKey] = parseInt(value) || 1;
-                    }
-                } else {
-                    data[key] = value;
-                }
-            });
-
-            console.log('Données à envoyer:', data);
-
-            // Envoi de la requête
+            // Envoi de la requête AJAX
             fetch(form.action, {
                 method: 'POST',
+                body: formData,
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json'
-                },
-                body: JSON.stringify(data)
+                }
             })
             .then(response => {
-                console.log('Status de la réponse:', response.status);
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+                    return response.json().then(data => {
+                        throw new Error(data.error || 'Une erreur est survenue');
+                    });
                 }
                 return response.json();
             })
             .then(data => {
-                console.log('Données reçues:', data);
+                console.log('Réponse du serveur:', data);
 
                 if (data.success && data.redirectUrl) {
-                    console.log('Redirection vers:', data.redirectUrl);
-                    showMessage('Redirection vers FedaPay...', 'success');
-
-                    // Petit délai pour que l'utilisateur voie le message
+                    // Redirection vers FedaPay
+                    showMessage('Redirection vers la page de paiement...', 'success');
                     setTimeout(() => {
                         window.location.href = data.redirectUrl;
                     }, 1000);
-                } else if (data.error) {
-                    showMessage(data.error);
                 } else {
-                    showMessage('Réponse inattendue du serveur');
+                    throw new Error(data.error || 'Erreur lors de la création de la commande');
                 }
             })
             .catch(error => {
                 console.error('Erreur:', error);
-                showMessage('Une erreur est survenue. Veuillez réessayer.');
-            })
-            .finally(() => {
+
                 // Restaurer l'interface
                 if (submitButton) {
                     submitButton.disabled = false;
@@ -691,27 +679,170 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (buttonText) buttonText.textContent = 'Payer en toute sécurité';
                 }
                 if (loadingOverlay) loadingOverlay.classList.add('hidden');
+
+                // Afficher l'erreur
+                showMessage(error.message || 'Une erreur est survenue. Veuillez réessayer.');
             });
         });
     }
 
-    // Initialisation
+    /**
+     * Fonction utilitaire pour valider l'email
+     */
+    function isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    /**
+     * Initialisation des totaux au chargement de la page
+     */
     updateTotals();
 
-    // Gestion des messages flash Laravel
-    @if(session('success'))
-        showMessage('{{ session('success') }}', 'success');
-    @endif
+    /**
+     * Gestion des événements de redimensionnement pour la responsivité
+     */
+    window.addEventListener('resize', function() {
+        // Ajuster la position des éléments fixes si nécessaire
+        const summaryCard = document.querySelector('.summary-card');
+        if (summaryCard && window.innerWidth < 1024) {
+            summaryCard.classList.remove('sticky', 'top-8');
+        } else if (summaryCard) {
+            summaryCard.classList.add('sticky', 'top-8');
+        }
+    });
 
-    @if(session('error'))
-        showMessage('{{ session('error') }}');
-    @endif
+    /**
+     * Validation en temps réel du formulaire
+     */
+    form.addEventListener('input', function(e) {
+        if (e.target.matches('input[required], select[required]')) {
+            validateField(e.target);
+        }
+    });
 
-    @if($errors->any())
-        @foreach($errors->all() as $error)
-            showMessage('{{ $error }}');
-        @endforeach
-    @endif
+    /**
+     * Prévention de la double soumission
+     */
+    let isSubmitting = false;
+    form.addEventListener('submit', function(e) {
+        if (isSubmitting) {
+            e.preventDefault();
+            return false;
+        }
+        isSubmitting = true;
+    });
+
+    /**
+     * Auto-formatage du numéro de téléphone
+     */
+    const phoneInput = document.getElementById('phone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, ''); // Supprimer tout sauf les chiffres
+
+            // Limiter à 8 chiffres
+            if (value.length > 8) {
+                value = value.substr(0, 8);
+            }
+
+            // Formater avec des espaces
+            if (value.length >= 2) {
+                value = value.replace(/(\d{2})(\d{0,2})(\d{0,2})(\d{0,2})/, '$1 $2 $3 $4').trim();
+            }
+
+            e.target.value = value;
+        });
+    }
+
+    /**
+     * Gestion des raccourcis clavier
+     */
+    document.addEventListener('keydown', function(e) {
+        // Échapper pour fermer les overlays
+        if (e.key === 'Escape') {
+            if (loadingOverlay && !loadingOverlay.classList.contains('hidden')) {
+                // Ne pas permettre de fermer pendant le traitement
+                return;
+            }
+        }
+
+        // Entrée pour soumettre le formulaire si tous les champs requis sont remplis
+        if (e.key === 'Enter' && e.ctrlKey) {
+            const allRequired = Array.from(document.querySelectorAll('input[required], select[required]'));
+            const allFilled = allRequired.every(field => field.value.trim());
+
+            if (allFilled) {
+                form.requestSubmit();
+            }
+        }
+    });
+
+    /**
+     * Sauvegarde automatique des données dans sessionStorage (si supporté)
+     */
+    function saveFormData() {
+        if (typeof(Storage) !== "undefined") {
+            const formData = {
+                name: document.getElementById('name').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                address: document.getElementById('address').value,
+                city: document.getElementById('city').value
+            };
+            sessionStorage.setItem('nova_order_form', JSON.stringify(formData));
+        }
+    }
+
+    /**
+     * Restauration automatique des données depuis sessionStorage
+     */
+    function loadFormData() {
+        if (typeof(Storage) !== "undefined") {
+            const savedData = sessionStorage.getItem('nova_order_form');
+            if (savedData) {
+                try {
+                    const formData = JSON.parse(savedData);
+                    Object.keys(formData).forEach(key => {
+                        const field = document.getElementById(key);
+                        if (field && !field.value) {
+                            field.value = formData[key];
+                        }
+                    });
+                    updateTotals();
+                } catch (e) {
+                    console.log('Erreur lors de la restauration des données:', e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Sauvegarde périodique des données
+     */
+    const saveInterval = setInterval(saveFormData, 30000); // Toutes les 30 secondes
+
+    // Sauvegarder aussi lors des changements
+    ['name', 'phone', 'email', 'address', 'city'].forEach(fieldName => {
+        const field = document.getElementById(fieldName);
+        if (field) {
+            field.addEventListener('blur', saveFormData);
+        }
+    });
+
+    // Nettoyer à la fermeture de la page
+    window.addEventListener('beforeunload', function() {
+        clearInterval(saveInterval);
+        // Ne pas sauvegarder si le formulaire a été soumis avec succès
+        if (!isSubmitting) {
+            saveFormData();
+        }
+    });
+
+    // Charger les données sauvegardées au démarrage
+    loadFormData();
+
+    console.log('Script de commande initialisé avec succès');
 });
 </script>
 @endpush

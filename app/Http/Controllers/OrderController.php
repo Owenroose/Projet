@@ -71,191 +71,181 @@ class OrderController extends Controller
     /**
      * Traite la commande, crée la transaction FedaPay et retourne l'URL de redirection.
      */
-  /**
- * Traite la commande, crée la transaction FedaPay et retourne l'URL de redirection.
- */
-public function store(Request $request)
-{
-    Log::info('Début de store()', [
-        'request_all' => $request->all(),
-    ]);
+    public function store(Request $request)
+    {
+        Log::info('Début de store()', [
+            'request_all' => $request->all(),
+        ]);
 
-    $validated = $request->validate([
-        'name' => 'required|string|max:255',
-        'phone' => 'required|string|max:20',
-        'email' => 'nullable|email|max:255',
-        'address' => 'required|string|max:500',
-        'city' => 'required|string|max:100',
-        'product_id' => 'nullable|integer|exists:products,id',
-        'quantities' => 'nullable|array',
-        'quantities.*' => 'integer|min:1|max:99'
-    ]);
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'address' => 'required|string|max:500',
+            'city' => 'required|string|max:100',
+            'product_id' => 'nullable|integer|exists:products,id',
+            'quantities' => 'nullable|array',
+            'quantities.*' => 'integer|min:1|max:99'
+        ]);
 
-    DB::beginTransaction();
-    try {
-        $orderGroup = Str::uuid()->toString();
-        $orderItems = [];
-        $totalProductAmount = 0;
+        DB::beginTransaction();
+        try {
+            $orderGroup = Str::uuid()->toString();
+            $orderItems = [];
+            $totalProductAmount = 0;
 
-        if ($request->has('product_id') && $request->product_id) {
-            $product = Product::findOrFail($request->product_id);
-            $quantity = $request->quantities[$product->id] ?? 1;
-            $orderItems[] = [
-                'product' => $product,
-                'quantity' => $quantity,
-                'subtotal' => $product->price * $quantity
-            ];
-            $totalProductAmount = $product->price * $quantity;
-        } else {
-            $cart = Session::get('cart', []);
-            $quantities = $request->quantities ?? [];
+            if ($request->has('product_id') && $request->product_id) {
+                $product = Product::findOrFail($request->product_id);
+                $quantity = $request->quantities[$product->id] ?? 1;
+                $orderItems[] = [
+                    'product' => $product,
+                    'quantity' => $quantity,
+                    'subtotal' => $product->price * $quantity
+                ];
+                $totalProductAmount = $product->price * $quantity;
+            } else {
+                $cart = Session::get('cart', []);
+                $quantities = $request->quantities ?? [];
 
-            foreach ($cart as $productId => $cartItem) {
-                $product = Product::find($productId);
-                if ($product) {
-                    $quantity = $quantities[$productId] ?? $cartItem['quantity'] ?? 1;
-                    $orderItems[] = [
-                        'product' => $product,
-                        'quantity' => $quantity,
-                        'subtotal' => $product->price * $quantity
-                    ];
-                    $totalProductAmount += $product->price * $quantity;
+                foreach ($cart as $productId => $cartItem) {
+                    $product = Product::find($productId);
+                    if ($product) {
+                        $quantity = $quantities[$productId] ?? $cartItem['quantity'] ?? 1;
+                        $orderItems[] = [
+                            'product' => $product,
+                            'quantity' => $quantity,
+                            'subtotal' => $product->price * $quantity
+                        ];
+                        $totalProductAmount += $product->price * $quantity;
+                    }
                 }
             }
-        }
 
-        if (empty($orderItems)) {
-            throw new \Exception('Aucun produit n\'est disponible en stock pour la commande.');
-        }
+            if (empty($orderItems)) {
+                throw new \Exception('Aucun produit n\'est disponible en stock pour la commande.');
+            }
 
-        // Calcul des frais de livraison
-        $cityPrices = [
-            'Cotonou' => 1500, 'Calavi' => 1500, 'Porto-Novo' => 3000,
-            'Ouidah' => 3000, 'Centre/Nord' => 4000
-        ];
-        $baseShippingFee = $cityPrices[$validated['city']] ?? 0;
-        $shippingFee = $this->calculateShippingFee($baseShippingFee, $totalProductAmount);
-        $finalAmount = $totalProductAmount + $shippingFee;
+            // NOUVELLE LOGIQUE DES FRAIS DE LIVRAISON
+            $cityPrices = [
+                'Cotonou' => 1500, 'Calavi' => 1500, 'Porto-Novo' => 3000,
+                'Ouidah' => 3000, 'Centre/Nord' => 4000
+            ];
+            $baseShippingFee = $cityPrices[$validated['city']] ?? 0;
+            $shippingFee = $this->calculateShippingFee($baseShippingFee, $totalProductAmount);
+            $finalAmount = $totalProductAmount + $shippingFee;
 
-        Log::info('Création transaction FedaPay', [
-            'order_group' => $orderGroup,
-            'amount' => $finalAmount,
-            'shipping_fee' => $shippingFee,
-            'total_product_amount' => $totalProductAmount
-        ]);
-
-        // CORRECTION ICI : Utiliser des URLs absolues au lieu des routes nommées
-        $transaction = Transaction::create([
-            "description" => "Commande Nova Tech Bénin - " . count($orderItems) . " produit(s)",
-            "amount" => $finalAmount,
-            "currency" => ["iso" => "XOF"],
-            "callback_url" => url('/orders/payment/callback'),
-            "success_url" => url('/orders/success/' . $orderGroup),
-            "failure_url" => url('/orders/failure'),
-            "customer" => [
-                "email" => $validated['email'] ?: $validated['name'] . '@novatech.bj',
-                "lastname" => $validated['name'],
-                "phone_number" => [
-                    "number" => $validated['phone'],
-                    "country" => "BJ"
-                ]
-            ],
-            "custom_metadata" => [
-                "order_group" => $orderGroup,
-                "customer_city" => $validated['city'],
-                "total_products" => count($orderItems)
-            ]
-        ]);
-
-        $token = $transaction->generateToken();
-
-        Log::info('Transaction FedaPay créée', [
-            'transaction_id' => $transaction->id,
-            'token_id' => $token->id,
-            'redirect_url' => $token->url
-        ]);
-
-        foreach ($orderItems as $item) {
-            Order::create([
+            Log::info('Calcul des frais', [
                 'order_group' => $orderGroup,
-                'product_id' => $item['product']->id,
-                'quantity' => $item['quantity'],
-                'unit_price' => $item['product']->price,
-                'subtotal' => $item['subtotal'],
-                'shipping_fee' => count($orderItems) === 1 ? $shippingFee : ($shippingFee / count($orderItems)),
-                'total_amount' => $finalAmount,
-                'fedapay_transaction_id' => $transaction->id,
-                'fedapay_token' => $token->id,
-                'status' => 'pending',
-                'payment_status' => 'pending',
-                'customer_name' => $validated['name'],
-                'customer_email' => $validated['email'],
-                'customer_phone' => $validated['phone'],
-                'customer_address' => $validated['address'],
-                'customer_city' => $validated['city'],
+                'total_product_amount' => $totalProductAmount,
+                'base_shipping_fee' => $baseShippingFee,
+                'calculated_shipping_fee' => $shippingFee,
+                'final_amount' => $finalAmount
             ]);
+
+            $transaction = Transaction::create([
+                "description" => "Commande Nova Tech Bénin - " . count($orderItems) . " produit(s)",
+                "amount" => $finalAmount,
+                "currency" => ["iso" => "XOF"],
+                "callback_url" => url('/orders/payment/callback'),
+                "success_url" => url('/orders/success/' . $orderGroup),
+                "failure_url" => url('/orders/failure'),
+                "customer" => [
+                    "email" => $validated['email'] ?: $validated['name'] . '@novatech.bj',
+                    "lastname" => $validated['name'],
+                    "phone_number" => [
+                        "number" => $validated['phone'],
+                        "country" => "BJ"
+                    ]
+                ],
+                "custom_metadata" => [
+                    "order_group" => $orderGroup,
+                    "customer_city" => $validated['city'],
+                    "total_products" => count($orderItems)
+                ]
+            ]);
+
+            $token = $transaction->generateToken();
+
+            foreach ($orderItems as $item) {
+                Order::create([
+                    'order_group' => $orderGroup,
+                    'product_id' => $item['product']->id,
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['product']->price,
+                    'subtotal' => $item['subtotal'],
+                    'shipping_fee' => count($orderItems) === 1 ? $shippingFee : ($shippingFee / count($orderItems)),
+                    'total_amount' => $finalAmount,
+                    'fedapay_transaction_id' => $transaction->id,
+                    'fedapay_token' => $token->id,
+                    'status' => 'pending',
+                    'payment_status' => 'pending',
+                    'customer_name' => $validated['name'],
+                    'customer_email' => $validated['email'],
+                    'customer_phone' => $validated['phone'],
+                    'customer_address' => $validated['address'],
+                    'customer_city' => $validated['city'],
+                ]);
+            }
+
+            DB::commit();
+
+            Log::info('Commande créée avec succès', [
+                'order_group' => $orderGroup,
+                'transaction_id' => $transaction->id,
+                'amount' => $finalAmount,
+                'redirect_url' => $token->url
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'redirectUrl' => $token->url,
+                'message' => 'Commande créée avec succès'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('Erreur lors de la création de la commande', [
+                'error_message' => $e->getMessage(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine(),
+                'request_data' => $request->only(['name', 'phone', 'city', 'product_id']),
+                'quantities' => $request->quantities ?? [],
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            if (strpos($e->getMessage(), 'FedaPay') !== false) {
+                $errorMessage = 'Erreur de connexion au service de paiement. Veuillez réessayer dans quelques instants.';
+            } elseif (strpos($e->getMessage(), 'Missing required parameter') !== false) {
+                $errorMessage = 'Erreur de configuration des routes. Veuillez contacter le support.';
+            } elseif (strpos($e->getMessage(), 'Ville') !== false) {
+                $errorMessage = 'La ville sélectionnée n\'est pas prise en charge pour la livraison.';
+            } elseif (strpos($e->getMessage(), 'produit') !== false) {
+                $errorMessage = 'Un ou plusieurs produits ne sont plus disponibles.';
+            } else {
+                $errorMessage = 'Une erreur est survenue lors du traitement de votre commande. Veuillez réessayer.';
+            }
+
+            return response()->json([
+                'success' => false,
+                'error' => $errorMessage
+            ], 500);
         }
-
-        DB::commit();
-
-        Log::info('Commande créée avec succès', [
-            'order_group' => $orderGroup,
-            'transaction_id' => $transaction->id,
-            'amount' => $finalAmount,
-            'redirect_url' => $token->url
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'redirectUrl' => $token->url,
-            'message' => 'Commande créée avec succès'
-        ]);
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-
-        Log::error('Erreur lors de la création de la commande', [
-            'error_message' => $e->getMessage(),
-            'error_file' => $e->getFile(),
-            'error_line' => $e->getLine(),
-            'request_data' => $request->only(['name', 'phone', 'city', 'product_id']),
-            'quantities' => $request->quantities ?? [],
-            'trace' => $e->getTraceAsString()
-        ]);
-
-        // Messages d'erreur plus spécifiques selon le type d'erreur
-        if (strpos($e->getMessage(), 'FedaPay') !== false) {
-            $errorMessage = 'Erreur de connexion au service de paiement. Veuillez réessayer dans quelques instants.';
-        } elseif (strpos($e->getMessage(), 'Missing required parameter') !== false) {
-            $errorMessage = 'Erreur de configuration des routes. Veuillez contacter le support.';
-        } elseif (strpos($e->getMessage(), 'Ville') !== false) {
-            $errorMessage = 'La ville sélectionnée n\'est pas prise en charge pour la livraison.';
-        } elseif (strpos($e->getMessage(), 'produit') !== false) {
-            $errorMessage = 'Un ou plusieurs produits ne sont plus disponibles.';
-        } else {
-            $errorMessage = 'Une erreur est survenue lors du traitement de votre commande. Veuillez réessayer.';
-        }
-
-        return response()->json([
-            'success' => false,
-            'error' => $errorMessage
-        ], 500);
     }
-}
 
     /**
-     * Calcule les frais de livraison selon le montant de la commande
+     * NOUVELLE LOGIQUE : Calcule les frais de livraison selon le montant de la commande
+     * - Moins de 50 000 CFA : Livraison gratuite
+     * - 50 001 CFA et plus : Frais de livraison selon la ville
      */
     private function calculateShippingFee($baseFee, $orderTotal)
     {
-        if ($orderTotal >= 200000) { // 200 000 CFA et plus
-            return 0; // Livraison gratuite
-        } elseif ($orderTotal >= 50000) { // 50 000 CFA et plus
-            return intval($baseFee / 2); // -50% sur les frais
-        } elseif ($orderTotal >= 2000) { // 2 000 CFA et plus (mais moins de 50 000)
-            return 0; // Livraison offerte
+        if ($orderTotal < 50000) {
+            // Livraison gratuite pour les commandes inférieures à 50 000 CFA
+            return 0;
         } else {
-            return $baseFee; // Prix normal
+            // Application des frais normaux pour les commandes de 50 001 CFA et plus
+            return $baseFee;
         }
     }
 
@@ -368,9 +358,20 @@ public function store(Request $request)
     }
 
     /**
+     * Gère l'annulation du paiement FedaPay.
+     */
+    public function cancel(Request $request)
+    {
+        Log::info('Paiement annulé par l\'utilisateur', [
+            'request_data' => $request->all()
+        ]);
+
+        return redirect()->route('orders.failure')
+            ->with('error', 'Le paiement a été annulé. Vous pouvez réessayer à tout moment.');
+    }
+
+    /**
      * Affiche la page de succès après le paiement.
-     * @param  string  $orderGroup
-     * @return \Illuminate\View\View
      */
     public function showSuccess($orderGroup)
     {
@@ -396,13 +397,15 @@ public function store(Request $request)
             }
         }
 
-        // Le montant total est déjà calculé correctement dans la base (produits + livraison)
         $totalAmount = $order->total_amount;
         $shippingFee = $order->shipping_fee;
 
         return view('orders.success', compact('order', 'orderItems', 'totalProductAmount', 'totalAmount', 'shippingFee'));
     }
 
+    /**
+     * Affiche la facture d'une commande.
+     */
     public function showInvoice(Order $order)
     {
         $orderItems = Order::where('order_group', $order->order_group)->get();
@@ -412,14 +415,4 @@ public function store(Request $request)
 
         return view('orders.invoice', compact('order', 'orderItems', 'totalProductAmount', 'shippingFee', 'totalAmount'));
     }
-
-    public function cancel(Request $request)
-{
-    Log::info('Paiement annulé par l\'utilisateur', [
-        'request_data' => $request->all()
-    ]);
-
-    return redirect()->route('orders.failure')
-        ->with('error', 'Le paiement a été annulé. Vous pouvez réessayer à tout moment.');
-}
 }

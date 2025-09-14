@@ -3,32 +3,54 @@
 @section('title', 'Dashboard des Commandes')
 
 @push('styles')
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
     :root {
-        --primary-color: #2563eb;
-        --secondary-color: #64748b;
-        --success-color: #059669;
-        --warning-color: #d97706;
-        --danger-color: #dc2626;
-        --info-color: #0891b2;
-        --dark-color: #1e293b;
-        --light-color: #f8fafc;
-        --border-color: #e2e8f0;
-        --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        --gradient-4: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-        --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        --primary: #3b82f6;
+        --primary-light: #dbeafe;
+        --secondary: #64748b;
+        --success: #10b981;
+        --success-light: #d1fae5;
+        --warning: #f59e0b;
+        --warning-light: #fef3c7;
+        --danger: #ef4444;
+        --danger-light: #fee2e2;
+        --info: #06b6d4;
+        --info-light: #cffafe;
+        --dark: #0f172a;
+        --light: #f8fafc;
+        --white: #ffffff;
+        --border: #e2e8f0;
+        --gradient-blue: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --gradient-green: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --gradient-purple: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --gradient-orange: linear-gradient(135deg, #fdbb2d 0%, #22c1c3 100%);
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background-color: #f1f5f9;
+        line-height: 1.6;
+    }
+
+    .dashboard-container {
+        min-height: 100vh;
+        padding: 2rem;
     }
 
     .dashboard-header {
-        background: white;
-        border-radius: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 1rem;
         padding: 2rem;
         margin-bottom: 2rem;
-        box-shadow: var(--shadow-lg);
+        color: white;
         position: relative;
         overflow: hidden;
     }
@@ -36,997 +58,358 @@
     .dashboard-header::before {
         content: '';
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: var(--gradient-1);
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 200%;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        opacity: 0.1;
     }
 
-    .header-title h1 {
+    .dashboard-header h1 {
         font-size: 2.5rem;
-        font-weight: 800;
-        background: var(--gradient-1);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-bottom: 0.5rem;
-    }
-
-    .header-subtitle {
-        color: var(--secondary-color);
-        font-size: 1.1rem;
-        font-weight: 500;
-    }
-
-    .btn-modern {
-        padding: 0.75rem 1.5rem;
-        border-radius: 12px;
-        font-weight: 600;
-        text-decoration: none;
-        transition: all 0.3s ease;
-        border: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .btn-modern::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-        transition: left 0.5s;
-    }
-
-    .btn-modern:hover::before {
-        left: 100%;
-    }
-
-    .btn-primary-modern {
-        background: var(--gradient-1);
-        color: white;
-    }
-
-    .btn-secondary-modern {
-        background: rgba(100, 116, 139, 0.1);
-        color: var(--secondary-color);
-        border: 2px solid var(--border-color);
-    }
-
-    .btn-modern:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-lg);
-        color: white;
-    }
-
-    .metric-card {
-        background: white;
-        border-radius: 20px;
-        padding: 2rem;
-        box-shadow: var(--shadow);
-        position: relative;
-        overflow: hidden;
-        transition: all 0.3s ease;
-        border: 1px solid var(--border-color);
-        height: 100%;
-    }
-
-    .metric-card:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--shadow-lg);
-    }
-
-    .metric-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-    }
-
-    .metric-card.primary::before { background: var(--gradient-1); }
-    .metric-card.success::before { background: var(--gradient-4); }
-    .metric-card.warning::before { background: var(--gradient-2); }
-    .metric-card.info::before { background: var(--gradient-3); }
-
-    .metric-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 1rem;
-    }
-
-    .metric-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        color: white;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .metric-icon.primary { background: var(--gradient-1); }
-    .metric-icon.success { background: var(--gradient-4); }
-    .metric-icon.warning { background: var(--gradient-2); }
-    .metric-icon.info { background: var(--gradient-3); }
-
-    .metric-value {
-        font-size: 3rem;
-        font-weight: 800;
-        color: var(--dark-color);
-        margin-bottom: 0.5rem;
-        line-height: 1;
-    }
-
-    .metric-label {
-        font-size: 0.9rem;
-        color: var(--secondary-color);
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .metric-subtitle {
-        font-size: 1rem;
-        color: var(--secondary-color);
-        margin-top: 0.5rem;
-    }
-
-    .chart-container {
-        background: white;
-        border-radius: 20px;
-        padding: 2rem;
-        box-shadow: var(--shadow);
-        border: 1px solid var(--border-color);
-        height: 100%;
-    }
-
-    .chart-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-        padding-bottom: 1rem;
-        border-bottom: 2px solid var(--border-color);
-    }
-
-    .chart-title {
-        font-size: 1.5rem;
         font-weight: 700;
-        color: var(--dark-color);
-    }
-
-    .status-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1rem;
-        background: var(--light-color);
-        border-radius: 12px;
         margin-bottom: 0.5rem;
-        transition: all 0.3s ease;
-    }
-
-    .status-item:hover {
-        background: white;
-        box-shadow: var(--shadow);
-    }
-
-    .status-dot {
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        margin-right: 1rem;
-    }
-
-    .priority-alert {
-        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-        border: 2px solid #f59e0b;
-        border-radius: 20px;
-        padding: 2rem;
-        text-align: center;
-        position: relative;
-        overflow: hidden;
-        animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.9; }
-    }
-
-    .priority-icon {
-        width: 60px;
-        height: 60px;
-        background: linear-gradient(135deg, #f59e0b, #d97706);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 1rem;
-        font-size: 1.5rem;
-        color: white;
-    }
-
-    .priority-value {
-        font-size: 3rem;
-        font-weight: 900;
-        color: #d97706;
-        margin-bottom: 0.5rem;
-    }
-
-    .table-container {
-        background: white;
-        border-radius: 20px;
-        overflow: hidden;
-        box-shadow: var(--shadow);
-        border: 1px solid var(--border-color);
-    }
-
-    .table-header {
-        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-        padding: 2rem;
-        border-bottom: 2px solid var(--border-color);
-    }
-
-    .table-title {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--dark-color);
-        margin-bottom: 0.5rem;
-    }
-
-    .modern-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .modern-table th {
-        background: var(--light-color);
-        padding: 1rem 1.5rem;
-        font-weight: 700;
-        color: var(--secondary-color);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        font-size: 0.8rem;
-        border-bottom: 2px solid var(--border-color);
-    }
-
-    .modern-table td {
-        padding: 1.5rem;
-        border-bottom: 1px solid var(--border-color);
-        vertical-align: middle;
-    }
-
-    .modern-table tbody tr:hover {
-        background: var(--light-color);
-    }
-
-    .status-badge {
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .badge-pending { background: #fef3c7; color: #d97706; }
-    .badge-processing { background: #dbeafe; color: #2563eb; }
-    .badge-shipped { background: #f3e8ff; color: #7c3aed; }
-    .badge-delivered { background: #d1fae5; color: #059669; }
-    .badge-cancelled { background: #fee2e2; color: #dc2626; }
-
-    .actions-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1rem;
-    }
-
-    .action-btn {
-        background: white;
-        border: 2px solid var(--border-color);
-        border-radius: 16px;
-        padding: 1.5rem;
-        text-align: center;
-        text-decoration: none;
-        color: var(--dark-color);
-        transition: all 0.3s ease;
-        font-weight: 600;
-        position: relative;
-        overflow: hidden;
-        display: block;
-    }
-
-    .action-btn::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: var(--gradient-1);
-        transition: left 0.3s;
-        z-index: 1;
-    }
-
-    .action-btn:hover::before {
-        left: 0;
-    }
-
-    .action-btn:hover {
-        color: white;
-        border-color: transparent;
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-lg);
-        text-decoration: none;
-    }
-
-    .action-btn i,
-    .action-btn span {
         position: relative;
         z-index: 2;
     }
 
+    .dashboard-header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 0;
+        position: relative;
+        z-index: 2;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: var(--white);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        border-radius: 1rem 1rem 0 0;
+    }
+
+    .stat-card.total-orders::before { background: var(--gradient-blue); }
+    .stat-card.total-sales::before { background: var(--gradient-green); }
+    .stat-card.pending-orders::before { background: var(--gradient-orange); }
+    .stat-card.priority-orders::before { background: var(--gradient-purple); }
+
+    .stat-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .stat-icon {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+    }
+
+    .stat-icon.blue { background: var(--gradient-blue); }
+    .stat-icon.green { background: var(--gradient-green); }
+    .stat-icon.orange { background: var(--gradient-orange); }
+    .stat-icon.purple { background: var(--gradient-purple); }
+
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--dark);
+        line-height: 1;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        color: var(--secondary);
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .stat-change {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-top: 0.5rem;
+    }
+
+    .stat-change.positive {
+        color: var(--success);
+    }
+
+    .stat-change.negative {
+        color: var(--danger);
+    }
+
+    .charts-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .chart-card {
+        background: var(--white);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+    }
+
+    .chart-header {
+        display: flex;
+        align-items: center;
+        justify-content: between;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .chart-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--dark);
+    }
+
+    .chart-subtitle {
+        color: var(--secondary);
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .recent-orders-card {
+        background: var(--white);
+        border-radius: 1rem;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+    }
+
+    .card-header-custom {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .table-container {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .modern-table {
+        margin: 0;
+        border: none;
+    }
+
+    .modern-table thead th {
+        background-color: var(--light);
+        border: none;
+        font-weight: 600;
+        color: var(--secondary);
+        font-size: 0.875rem;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .modern-table tbody tr {
+        border: none;
+        transition: background-color 0.2s ease;
+    }
+
+    .modern-table tbody tr:hover {
+        background-color: var(--light);
+    }
+
+    .modern-table tbody td {
+        padding: 1rem;
+        border: none;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+    }
+
+    .customer-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .customer-name {
+        font-weight: 600;
+        color: var(--dark);
+    }
+
+    .customer-email {
+        font-size: 0.875rem;
+        color: var(--secondary);
+    }
+
+    .product-list {
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .amount-cell {
+        font-weight: 600;
+        color: var(--dark);
+    }
+
+    .status-badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .status-pending {
+        background-color: var(--warning-light);
+        color: var(--warning);
+    }
+
+    .status-processing {
+        background-color: var(--info-light);
+        color: var(--info);
+    }
+
+    .status-shipped {
+        background-color: var(--success-light);
+        color: var(--success);
+    }
+
+    .status-delivered {
+        background-color: var(--primary-light);
+        color: var(--primary);
+    }
+
+    .status-cancelled {
+        background-color: var(--danger-light);
+        color: var(--danger);
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 3rem;
+        color: var(--secondary);
+    }
+
+    .no-data i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .btn-view-all {
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+        background-color: var(--primary);
+        color: white;
+        border: 1px solid var(--primary);
+        transition: all 0.2s ease;
+    }
+
+    .btn-view-all:hover {
+        background-color: transparent;
+        color: var(--primary);
+    }
+
     @media (max-width: 768px) {
-        .dashboard-header {
+        .dashboard-container {
             padding: 1rem;
         }
 
-        .header-title h1 {
-            font-size: 2rem;
+        .charts-grid {
+            grid-template-columns: 1fr;
         }
 
-        .metric-card {
+        .dashboard-header {
             padding: 1.5rem;
         }
 
-        .chart-container {
-            padding: 1rem;
+        .dashboard-header h1 {
+            font-size: 2rem;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
         }
     }
-</style>
-@endpush
 
-@section('content')
-<div class="container-fluid">
-    <div class="dashboard-header">
-        <div class="d-flex justify-content-between align-items-center flex-wrap">
-            <div class="header-title">
-                <h1>Dashboard des Commandes</h1>
-                <p class="header-subtitle">Vue d'ensemble complète de l'activité commerciale</p>
-            </div>
-            <div class="d-flex gap-3 flex-wrap">
-                <a href="{{ route('admin.orders.index') }}" class="btn-modern btn-primary-modern">
-                    <i class="fas fa-list"></i>
-                    Toutes les commandes
-                </a>
-                <button class="btn-modern btn-secondary-modern" onclick="refreshDashboard()">
-                    <i class="fas fa-sync-alt"></i>
-                    Actualiser
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-4 mb-4">
-        <div class="col-lg-3 col-md-6">
-            <div class="metric-card primary">
-                <div class="metric-header">
-                    <div>
-                        <div class="metric-label">Aujourd'hui</div>
-                        <div class="metric-value">{{ number_format($stats['today']['count']) }}</div>
-                        <div class="metric-subtitle">{{ number_format($stats['today']['revenue']) }} FCFA</div>
-                    </div>
-                    <div class="metric-icon primary">
-                        <i class="fas fa-calendar-day"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-md-6">
-            <div class="metric-card success">
-                <div class="metric-header">
-                    <div>
-                        <div class="metric-label">Cette semaine</div>
-                        <div class="metric-value">{{ number_format($stats['week']['count']) }}</div>
-                        <div class="metric-subtitle">{{ number_format($stats['week']['revenue']) }} FCFA</div>
-                    </div>
-                    <div class="metric-icon success">
-                        <i class="fas fa-calendar-week"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-md-6">
-            <div class="metric-card warning">
-                <div class="metric-header">
-                    <div>
-                        <div class="metric-label">Ce mois</div>
-                        <div class="metric-value">{{ number_format($stats['month']['count']) }}</div>
-                        <div class="metric-subtitle">{{ number_format($stats['month']['revenue']) }} FCFA</div>
-                    </div>
-                    <div class="metric-icon warning">
-                        <i class="fas fa-calendar-alt"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-md-6">
-            <div class="metric-card info">
-                <div class="metric-header">
-                    <div>
-                        <div class="metric-label">Revenus total</div>
-                        <div class="metric-value">{{ number_format($stats['total_revenue'] / 1000000, 1) }}M</div>
-                        <div class="metric-subtitle">FCFA</div>
-                    </div>
-                    <div class="metric-icon info">
-                        <i class="fas fa-coins"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-4 mb-4">
-        <div class="col-lg-8">
-            <div class="chart-container">
-                <div class="chart-header">
-                    <h3 class="chart-title">Évolution des commandes (7 derniers jours)</h3>
-                    <div class="d-flex gap-3">
-                        <div class="d-flex align-items-center">
-                            <div class="status-dot" style="background: #2563eb; margin-right: 0.5rem;"></div>
-                            <span style="font-size: 0.9rem; font-weight: 500;">Commandes</span>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <div class="status-dot" style="background: #059669; margin-right: 0.5rem;"></div>
-                            <span style="font-size: 0.9rem; font-weight: 500;">Revenus (M FCFA)</span>
-                        </div>
-                    </div>
-                </div>
-                <div style="height: 400px; position: relative;">
-                    <canvas id="ordersChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4">
-            <div class="chart-container mb-4">
-                <div class="chart-header">
-                    <h3 class="chart-title">Statut des commandes</h3>
-                </div>
-
-                <div>
-                    <div class="status-item">
-                        <div class="d-flex align-items-center">
-                            <div class="status-dot" style="background: #d97706;"></div>
-                            <span style="font-weight: 600;">En attente</span>
-                        </div>
-                        <span style="font-weight: 700; font-size: 1.1rem;">{{ $stats['by_status']['pending'] }}</span>
-                    </div>
-
-                    <div class="status-item">
-                        <div class="d-flex align-items-center">
-                            <div class="status-dot" style="background: #2563eb;"></div>
-                            <span style="font-weight: 600;">En cours</span>
-                        </div>
-                        <span style="font-weight: 700; font-size: 1.1rem;">{{ $stats['by_status']['processing'] }}</span>
-                    </div>
-
-                    <div class="status-item">
-                        <div class="d-flex align-items-center">
-                            <div class="status-dot" style="background: #7c3aed;"></div>
-                            <span style="font-weight: 600;">Expédiée</span>
-                        </div>
-                        <span style="font-weight: 700; font-size: 1.1rem;">{{ $stats['by_status']['shipped'] }}</span>
-                    </div>
-
-                    <div class="status-item">
-                        <div class="d-flex align-items-center">
-                            <div class="status-dot" style="background: #059669;"></div>
-                            <span style="font-weight: 600;">Livrée</span>
-                        </div>
-                        <span style="font-weight: 700; font-size: 1.1rem;">{{ $stats['by_status']['delivered'] }}</span>
-                    </div>
-
-                    <div class="status-item">
-                        <div class="d-flex align-items-center">
-                            <div class="status-dot" style="background: #dc2626;"></div>
-                            <span style="font-weight: 600;">Annulée</span>
-                        </div>
-                        <span style="font-weight: 700; font-size: 1.1rem;">{{ $stats['by_status']['cancelled'] }}</span>
-                    </div>
-                </div>
-
-                <div style="height: 200px; margin-top: 2rem;">
-                    <canvas id="statusChart"></canvas>
-                </div>
-            </div>
-
-            @if($stats['priority'] > 0)
-            <div class="priority-alert">
-                <div class="priority-icon">
-                    <i class="fas fa-star"></i>
-                </div>
-                <div class="priority-value">{{ $stats['priority'] }}</div>
-                <p style="font-weight: 600; color: #d97706; margin-bottom: 1rem;">Commandes prioritaires</p>
-                <p style="color: #92400e; font-size: 0.9rem; margin-bottom: 1.5rem;">Nécessitent une attention immédiate</p>
-                <a href="{{ route('admin.orders.index', ['status' => 'pending']) }}"
-                   class="btn-modern btn-primary-modern">
-                    <i class="fas fa-arrow-right"></i>
-                    Voir les commandes
-                </a>
-            </div>
-            @endif
-        </div>
-    </div>
-
-    <div class="table-container mb-4">
-        <div class="table-header">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h3 class="table-title">Commandes récentes</h3>
-                    <p style="color: var(--secondary-color); margin: 0;">Dernières transactions enregistrées</p>
-                </div>
-                <a href="{{ route('admin.orders.index') }}" class="btn-modern btn-primary-modern">
-                    Voir tout
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-
-        <div class="table-responsive">
-            <table class="modern-table">
-                <thead>
-                    <tr>
-                        <th>Commande</th>
-                        <th>Client</th>
-                        <th>Produit</th>
-                        <th>Montant</th>
-                        <th>Statut</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($recentOrders as $order)
-                    <tr>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                @if($order->is_priority)
-                                    <i class="fas fa-star text-warning me-2"></i>
-                                @endif
-                                <strong>#{{ $order->id }}</strong>
-                            </div>
-                        </td>
-                        <td>
-                            <div>
-                                <div style="font-weight: 600;">{{ $order->name }}</div>
-                                <div style="color: var(--secondary-color); font-size: 0.9rem;">{{ $order->email }}</div>
-                            </div>
-                        </td>
-                        <td>
-                            <div>
-                                <div>{{ Str::limit($order->product->name, 30) }}</div>
-                                <div style="color: var(--secondary-color); font-size: 0.9rem;">Qté: {{ $order->quantity }}</div>
-                            </div>
-                        </td>
-                        <td>
-                            <strong>{{ number_format($order->total_price) }} FCFA</strong>
-                        </td>
-                        <td>
-                            <span class="status-badge
-                                @if($order->status == 'pending') badge-pending
-                                @elseif($order->status == 'processing') badge-processing
-                                @elseif($order->status == 'shipped') badge-shipped
-                                @elseif($order->status == 'delivered') badge-delivered
-                                @elseif($order->status == 'cancelled') badge-cancelled
-                                @endif">
-                                @switch($order->status)
-                                    @case('pending') En attente @break
-                                    @case('processing') En cours @break
-                                    @case('shipped') Expédiée @break
-                                    @case('delivered') Livrée @break
-                                    @case('cancelled') Annulée @break
-                                @endswitch
-                            </span>
-                        </td>
-                        <td>
-                            <a href="{{ route('admin.orders.show', $order) }}"
-                               class="btn-modern btn-primary-modern"
-                               style="padding: 0.5rem 1rem; font-size: 0.8rem;">
-                                Voir détails
-                            </a>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="6" class="text-center py-5">
-                            <div style="color: var(--secondary-color);">
-                                <i class="fas fa-shopping-cart" style="font-size: 2rem; margin-bottom: 1rem;"></i>
-                                <p>Aucune commande récente</p>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="chart-container">
-        <h3 style="font-size: 1.5rem; font-weight: 700; color: var(--dark-color); margin-bottom: 2rem;">Actions rapides</h3>
-
-        <div class="actions-grid">
-            <button onclick="generateQuickReport()" class="action-btn">
-                <i class="fas fa-file-excel" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
-                <div>Rapport mensuel</div>
-            </button>
-
-            <a href="{{ route('admin.orders.index', ['status' => 'pending']) }}" class="action-btn">
-                <i class="fas fa-clock" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
-                <div>Commandes en attente</div>
-            </a>
-
-            <button onclick="sendBulkEmail()" class="action-btn">
-                <i class="fas fa-envelope" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
-                <div>Email groupé</div>
-            </button>
-        </div>
-    </div>
-</div>
-@endsection
-
-@push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-// Données pour les graphiques
-const chartData = @json($chartData);
-const statusData = @json($stats['by_status']);
-
-// Configuration du graphique en ligne
-const ctx = document.getElementById('ordersChart').getContext('2d');
-const ordersChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: chartData.map(item => item.date),
-        datasets: [
-            {
-                label: 'Nombre de commandes',
-                data: chartData.map(item => item.orders),
-                borderColor: '#2563eb',
-                backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                tension: 0.4,
-                fill: true,
-                pointBackgroundColor: '#2563eb',
-                pointBorderColor: '#ffffff',
-                pointBorderWidth: 3,
-                pointRadius: 6
-            },
-            {
-                label: 'Revenus (M FCFA)',
-                data: chartData.map(item => Math.round(item.revenue / 1000000 * 10) / 10),
-                borderColor: '#059669',
-                backgroundColor: 'rgba(5, 150, 105, 0.1)',
-                tension: 0.4,
-                fill: true,
-                yAxisID: 'y1',
-                pointBackgroundColor: '#059669',
-                pointBorderColor: '#ffffff',
-                pointBorderWidth: 3,
-                pointRadius: 6
-            }
-        ]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'bottom',
-                labels: {
-                    padding: 20,
-                    usePointStyle: true,
-                    font: {
-                        weight: 600
-                    }
-                }
-            },
-            tooltip: {
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                titleColor: '#ffffff',
-                bodyColor: '#ffffff',
-                borderColor: '#e2e8f0',
-                borderWidth: 1,
-                cornerRadius: 8,
-                displayColors: true
-            }
-        },
-        scales: {
-            y: {
-                type: 'linear',
-                display: true,
-                position: 'left',
-                beginAtZero: true,
-                title: {
-                    display: true,
-                    text: 'Nombre de commandes',
-                    font: {
-                        weight: 600
-                    }
-                },
-                grid: {
-                    color: 'rgba(0, 0, 0, 0.05)'
-                }
-            },
-            y1: {
-                type: 'linear',
-                display: true,
-                position: 'right',
-                beginAtZero: true,
-                title: {
-                    display: true,
-                    text: 'Revenus (M FCFA)',
-                    font: {
-                        weight: 600
-                    }
-                },
-                grid: {
-                    drawOnChartArea: false,
-                    color: 'rgba(0, 0, 0, 0.05)'
-                }
-            },
-            x: {
-                grid: {
-                    color: 'rgba(0, 0, 0, 0.05)'
-                }
-            }
-        }
-    }
-});
-
-// Configuration du graphique en donuts
-const statusCtx = document.getElementById('statusChart').getContext('2d');
-const statusChart = new Chart(statusCtx, {
-    type: 'doughnut',
-    data: {
-        labels: ['En attente', 'En cours', 'Expédiée', 'Livrée', 'Annulée'],
-        datasets: [{
-            data: [
-                statusData.pending,
-                statusData.processing,
-                statusData.shipped,
-                statusData.delivered,
-                statusData.cancelled
-            ],
-            backgroundColor: [
-                '#d97706',
-                '#2563eb',
-                '#7c3aed',
-                '#059669',
-                '#dc2626'
-            ],
-            borderWidth: 3,
-            borderColor: '#ffffff',
-            hoverBorderWidth: 5
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'bottom',
-                labels: {
-                    padding: 20,
-                    usePointStyle: true,
-                    font: {
-                        weight: 600
-                    }
-                }
-            }
-        },
-        cutout: '60%',
-        elements: {
-            arc: {
-                hoverBorderWidth: 6
-            }
-        }
-    }
-});
-
-// Fonctions utilitaires
-function refreshDashboard() {
-    // Afficher le loader
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    if (loadingOverlay) {
-        loadingOverlay.classList.add('active');
+    .loading-spinner {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
     }
 
-    setTimeout(() => {
-        location.reload();
-    }, 500);
-}
-
-function generateQuickReport() {
-    const today = new Date();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '{{ route("admin.orders.generate-report") }}';
-
-    const csrfField = document.createElement('input');
-    csrfField.type = 'hidden';
-    csrfField.name = '_token';
-    csrfField.value = document.querySelector('meta[name="csrf-token"]').content;
-
-    const dateFromField = document.createElement('input');
-    dateFromField.type = 'hidden';
-    dateFromField.name = 'date_from';
-    dateFromField.value = firstDay.toISOString().split('T')[0];
-
-    const dateToField = document.createElement('input');
-    dateToField.type = 'hidden';
-    dateToField.name = 'date_to';
-    dateToField.value = lastDay.toISOString().split('T')[0];
-
-    const formatField = document.createElement('input');
-    formatField.type = 'hidden';
-    formatField.name = 'format';
-    formatField.value = 'excel';
-
-    form.appendChild(csrfField);
-    form.appendChild(dateFromField);
-    form.appendChild(dateToField);
-    form.appendChild(formatField);
-
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
-}
-
-function sendBulkEmail() {
-    // Simulation d'une fonctionnalité d'email groupé
-    if (confirm('Voulez-vous envoyer un email groupé aux clients ayant des commandes en attente ?')) {
-        // Ici vous pouvez implémenter la logique d'envoi d'email groupé
-        alert('Fonctionnalité d\'email groupé en développement. Cette fonctionnalité sera bientôt disponible.');
-    }
-}
-
-// Animation d'entrée pour les cartes métriques
-document.addEventListener('DOMContentLoaded', function() {
-    const cards = document.querySelectorAll('.metric-card');
-    cards.forEach((card, index) => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(30px)';
-
-        setTimeout(() => {
-            card.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
-        }, index * 100);
-    });
-
-    // Animation pour les graphiques
-    setTimeout(() => {
-        ordersChart.update('active');
-        statusChart.update('active');
-    }, 800);
-});
-
-// Auto-refresh du dashboard toutes les 5 minutes
-setInterval(function() {
-    console.log('Dashboard auto-refresh...');
-    // Vous pouvez implémenter une actualisation AJAX ici si nécessaire
-}, 300000);
-
-// Gestion des erreurs de graphiques
-window.addEventListener('error', function(e) {
-    if (e.message.includes('Chart')) {
-        console.error('Erreur dans les graphiques:', e.message);
-    }
-});
-
-// Loader overlay pour les transitions
-document.addEventListener('DOMContentLoaded', function() {
-    // Créer le loader si il n'existe pas
-    if (!document.getElementById('loadingOverlay')) {
-        const loadingOverlay = document.createElement('div');
-        loadingOverlay.id = 'loadingOverlay';
-        loadingOverlay.className = 'loading-overlay';
-        loadingOverlay.innerHTML = '<div class="loading-spinner"></div>';
-        document.body.appendChild(loadingOverlay);
-    }
-});
-
-// Notifications toast personnalisées
-function showToast(message, type = 'success') {
-    const toast = document.createElement('div');
-    toast.className = `toast align-items-center text-white bg-${type} border-0`;
-    toast.setAttribute('role', 'alert');
-    toast.style.position = 'fixed';
-    toast.style.top = '20px';
-    toast.style.right = '20px';
-    toast.style.zIndex = '9999';
-    toast.style.minWidth = '300px';
-
-    toast.innerHTML = `
-        <div class="d-flex">
-            <div class="toast-body">
-                <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : 'info'}-circle me-2"></i>
-                ${message}
-            </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.parentElement.parentElement.remove()"></button>
-        </div>
-    `;
-
-    document.body.appendChild(toast);
-
-    // Auto-remove après 5 secondes
-    setTimeout(() => {
-        if (toast.parentNode) {
-            toast.remove();
-        }
-    }, 5000);
-}
-
-// Raccourcis clavier
-document.addEventListener('keydown', function(e) {
-    if (e.ctrlKey) {
-        switch(e.key) {
-            case 'r':
-                e.preventDefault();
-                refreshDashboard();
-                break;
-            case 'o':
-                e.preventDefault();
-                window.location.href = '{{ route("admin.orders.index") }}';
-                break;
-        }
-    }
-});
-
-// Optimisation des performances pour mobile
-if (window.innerWidth < 768) {
-    // Réduire la fréquence d'animation sur mobile
-    document.querySelectorAll('.metric-card').forEach(card => {
-        card.style.transition = 'transform 0.2s ease';
-    });
-}
-
-console.log('Dashboard Nova Tech - Chargé avec succès');
-</script>
-
-<div id="loadingOverlay" class="position-fixed w-100 h-100 d-flex align-items-center justify-content-center"
-     style="top: 0; left: 0; background: rgba(255,255,255,0.9); z-index: 9999; opacity: 0; visibility: hidden; transition: all 0.3s ease;">
-    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
-        <span class="visually-hidden">Chargement...</span>
-    </div>
-</div>
-
-<style>
-    .loading-overlay.active {
-        opacity: 1 !important;
-        visibility: visible !important;
+    .loading-spinner.active {
+        opacity: 1;
+        visibility: visible;
     }
 
-    /* Animations supplémentaires */
-    @keyframes slideInUp {
+    .spinner {
+        width: 3rem;
+        height: 3rem;
+        border: 3px solid var(--border);
+        border-top: 3px solid var(--primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeInUp {
         from {
             opacity: 0;
             transform: translateY(30px);
@@ -1037,38 +420,332 @@ console.log('Dashboard Nova Tech - Chargé avec succès');
         }
     }
 
-    .metric-card {
-        animation: slideInUp 0.6s ease-out;
-    }
-
-    /* Responsive improvements */
-    @media (max-width: 576px) {
-        .dashboard-header {
-            padding: 1rem;
-        }
-
-        .header-title h1 {
-            font-size: 1.8rem;
-        }
-
-        .metric-value {
-            font-size: 2rem;
-        }
-
-        .chart-container {
-            padding: 1rem;
-        }
-
-        .modern-table th,
-        .modern-table td {
-            padding: 0.75rem;
-            font-size: 0.85rem;
-        }
-    }
-
-    /* Dark mode support (optionnel) */
-    @media (prefers-color-scheme: dark) {
-        /* Vous pouvez ajouter les styles dark mode ici si nécessaire */
+    .animate-fade-in {
+        animation: fadeInUp 0.6s ease-out;
     }
 </style>
+@endpush
+
+@section('content')
+<div class="dashboard-container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header animate-fade-in">
+        <h1>Tableau de bord des commandes</h1>
+        <p>Vue d'ensemble des performances, statistiques en temps réel et analyse des tendances</p>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card total-orders animate-fade-in" style="animation-delay: 0.1s;">
+            <div class="stat-card-header">
+                <div class="stat-icon blue">
+                    <i class="bx bx-shopping-bag"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ number_format($stats['totalOrders']) }}</div>
+            <div class="stat-label">Commandes totales</div>
+            <div class="stat-change positive">
+                <i class="bx bx-trending-up"></i>
+                <span>+12% ce mois</span>
+            </div>
+        </div>
+
+        <div class="stat-card total-sales animate-fade-in" style="animation-delay: 0.2s;">
+            <div class="stat-card-header">
+                <div class="stat-icon green">
+                    <i class="bx bx-dollar-circle"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ number_format($stats['totalSales'], 0, ',', ' ') }}</div>
+            <div class="stat-label">Chiffre d'affaires (FCFA)</div>
+            <div class="stat-change positive">
+                <i class="bx bx-trending-up"></i>
+                <span>+8% ce mois</span>
+            </div>
+        </div>
+
+        <div class="stat-card pending-orders animate-fade-in" style="animation-delay: 0.3s;">
+            <div class="stat-card-header">
+                <div class="stat-icon orange">
+                    <i class="bx bx-time"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ $stats['pendingOrders'] }}</div>
+            <div class="stat-label">En attente</div>
+            <div class="stat-change negative">
+                <i class="bx bx-trending-down"></i>
+                <span>-3% cette semaine</span>
+            </div>
+        </div>
+
+        <div class="stat-card priority-orders animate-fade-in" style="animation-delay: 0.4s;">
+            <div class="stat-card-header">
+                <div class="stat-icon purple">
+                    <i class="bx bx-bell"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ $stats['priorityOrders'] }}</div>
+            <div class="stat-label">Prioritaires</div>
+            <div class="stat-change positive">
+                <i class="bx bx-trending-up"></i>
+                <span>+5% cette semaine</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-grid">
+        <!-- Line Chart -->
+        <div class="chart-card animate-fade-in" style="animation-delay: 0.5s;">
+            <div class="chart-header">
+                <div>
+                    <div class="chart-title">Évolution des commandes</div>
+                    <div class="chart-subtitle">Tendance mensuelle de {{ date('Y') }}</div>
+                </div>
+            </div>
+            <div style="position: relative; height: 300px;">
+                <canvas id="ordersChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Pie Chart -->
+        <div class="chart-card animate-fade-in" style="animation-delay: 0.6s;">
+            <div class="chart-header">
+                <div>
+                    <div class="chart-title">Répartition par statut</div>
+                    <div class="chart-subtitle">Distribution actuelle</div>
+                </div>
+            </div>
+            <div style="position: relative; height: 300px;">
+                <canvas id="statusPieChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Orders -->
+    <div class="recent-orders-card animate-fade-in" style="animation-delay: 0.7s;">
+        <div class="card-header-custom">
+            <div>
+                <div class="chart-title">Commandes récentes</div>
+                <div class="chart-subtitle">Dernières activités</div>
+            </div>
+            <a href="{{ route('admin.orders.index') }}" class="btn-view-all">
+                Voir toutes
+            </a>
+        </div>
+
+        <div class="table-container">
+            @if ($recentOrders->isNotEmpty())
+                <table class="table modern-table">
+                    <thead>
+                        <tr>
+                            <th>Client</th>
+                            <th>Produits</th>
+                            <th>Montant</th>
+                            <th>Statut</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($recentOrders as $order)
+                        <tr>
+                            <td>
+                                <div class="customer-info">
+                                    <div class="customer-name">{{ $order->customer_name }}</div>
+                                    <div class="customer-email">{{ $order->customer_email ?: 'Non renseigné' }}</div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="product-list" title="{{ $order->items->pluck('product.name')->join(', ') }}">
+                                    {{ $order->items->count() }} produit(s)
+                                </div>
+                            </td>
+                            <td class="amount-cell">
+                                {{ number_format($order->total_amount, 0, ',', ' ') }} FCFA
+                            </td>
+                            <td>
+                                <span class="status-badge status-{{ $order->status }}">
+                                    {{ ucfirst($order->status) }}
+                                </span>
+                            </td>
+                            <td>
+                                <div style="color: var(--secondary); font-size: 0.875rem;">
+                                    {{ \Carbon\Carbon::parse($order->created_at)->format('d M Y') }}
+                                    <div style="font-size: 0.75rem; opacity: 0.7;">
+                                        {{ \Carbon\Carbon::parse($order->created_at)->format('H:i') }}
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @else
+                <div class="no-data">
+                    <i class="bx bx-info-circle"></i>
+                    <div>Aucune commande récente pour le moment</div>
+                </div>
+            @endif
+        </div>
+    </div>
+</div>
+
+<!-- Loading Spinner -->
+<div class="loading-spinner" id="loadingSpinner">
+    <div class="spinner"></div>
+</div>
+@endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Configuration des graphiques
+    Chart.defaults.font.family = 'Inter';
+    Chart.defaults.color = '#64748b';
+
+    // Graphique en ligne des commandes
+    const ctx = document.getElementById('ordersChart').getContext('2d');
+    const chartData = @json($chartData);
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: [{
+                label: 'Commandes',
+                data: chartData.data,
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#3b82f6',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: '#0f172a',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    borderColor: '#334155',
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.raw} commande${context.raw > 1 ? 's' : ''}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    border: {
+                        display: false
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: '#f1f5f9'
+                    },
+                    border: {
+                        display: false
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            if (Number.isInteger(value)) {
+                                return value;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Graphique circulaire des statuts
+    const pieCtx = document.getElementById('statusPieChart').getContext('2d');
+    const pieData = @json($statusPieChartData);
+
+    new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+            labels: pieData.labels,
+            datasets: [{
+                data: pieData.data,
+                backgroundColor: pieData.colors,
+                borderColor: '#ffffff',
+                borderWidth: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '60%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20,
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: '#0f172a',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    borderColor: '#334155',
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((context.raw / total) * 100).toFixed(1);
+                            return `${context.raw} (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Animation d'entrée
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.animate-fade-in').forEach(el => {
+        observer.observe(el);
+    });
+});
+</script>
 @endpush
