@@ -54,31 +54,25 @@ Route::prefix('cart')->name('cart.')->group(function () {
     Route::post('/sync', [CartController::class, 'sync'])->name('sync');
 });
 
-// Routes pour les commandes
+// Routes de gestion des commandes (Front-end)
 Route::prefix('orders')->name('orders.')->group(function () {
     Route::get('/create/{slug?}', [OrderController::class, 'create'])->name('create');
     Route::post('/store', [OrderController::class, 'store'])->name('store');
 
-    // Ajout de la route pour le paiement via FedaPay
-    Route::post('/process', [OrderController::class, 'process'])->name('process');
+    // Routes pour FedaPay - CORRIGÉES
+    Route::post('/payment/callback', [OrderController::class, 'handleCallback'])->name('payment.callback');
+    Route::get('/payment/cancel', [OrderController::class, 'cancel'])->name('cancel');
 
-    // Correction ici : Ajout des routes manquantes
-    Route::any('/payment/callback', [OrderController::class, 'handleCallback'])->name('payment.callback');
-    Route::get('/success', function () {
-        return view('orders.success'); // Vous devrez créer cette vue
-    })->name('success');
+    // Route de succès de commande (après le paiement)
+    Route::get('/success/{orderGroup}', [OrderController::class, 'showSuccess'])->name('success');
+
+    // Route de facture
+    Route::get('/{order}/invoice', [OrderController::class, 'showInvoice'])->name('invoice');
+
+    // Route d'échec de paiement
     Route::get('/failure', function () {
-        return view('orders.failure'); // Vous devrez créer cette vue
+        return view('orders.failure');
     })->name('failure');
-
-    // Ancienne route commentée ou à supprimer car remplacée par 'payment.callback'
-    // Route::match(['get', 'post'], '/callback/{order_group}', [OrderController::class, 'callback'])->name('callback');
-
-    // Routes admin
-    Route::get('/', [OrderController::class, 'index'])->name('index');
-    Route::get('/{orderId}', [OrderController::class, 'show'])->name('show');
-    Route::patch('/{orderId}/status', [OrderController::class, 'updateStatus'])->name('updateStatus');
-    Route::delete('/{orderId}', [OrderController::class, 'destroy'])->name('destroy');
 });
 
 // Admin Routes

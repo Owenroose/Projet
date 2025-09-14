@@ -177,7 +177,7 @@
         </div>
         <div class="invoice-details">
             <h2>FACTURE</h2>
-            <p><strong>Facture # :</strong> #{{ str_pad($order->id, 6, '0', STR_PAD_LEFT) }}</p>
+            <p><strong>Facture :</strong> {{ str_pad($order->order_group, 6, '0', STR_PAD_LEFT) }}</p>
             <p><strong>Date :</strong> {{ $order->created_at->format('d/m/Y') }}</p>
 
             @php
@@ -195,10 +195,10 @@
 
     <div class="customer-info">
         <h3>Facturé à :</h3>
-        <p><strong>{{ $order->name }}</strong></p>
-        <p>{{ $order->address }}</p>
-        <p>Tél : {{ $order->phone }}</p>
-        <p>Email : {{ $order->email }}</p>
+        <p><strong>{{ $order->customer_name }}</strong></p>
+        <p>{{ $order->customer_address }}</p>
+        <p>Tél : {{ $order->customer_phone }}</p>
+        <p>Email : {{ $order->customer_email }}</p>
     </div>
 
     <table class="invoice-table">
@@ -229,7 +229,7 @@
         </div>
         <div class="total-row">
             <span>Frais de livraison :</span>
-            <span>0 CFA</span>
+            <span>{{ number_format($order->shipping_fee, 0, ',', ' ') }}CFA</span>
         </div>
         <div class="total-row grand-total">
             <span>TOTAL À PAYER :</span>

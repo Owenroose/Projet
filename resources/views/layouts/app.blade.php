@@ -16,7 +16,7 @@
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
     <script src="https://cdn.fedapay.com/checkout.js"></script>
-
+<meta name="csrf-token" content="{{ csrf_token() }}">
     <style type="text/tailwindcss">
         @layer components {
             .nova-btn {

@@ -136,41 +136,6 @@
         .spinner {
             @apply animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full mx-auto mb-4;
         }
-
-        /* Styles Bootstrap personnalisés */
-        .bootstrap-section {
-            @apply bg-white py-12;
-        }
-
-        .bootstrap-section .card {
-            border: none;
-            border-radius: 15px;
-            overflow: hidden;
-        }
-
-        .bootstrap-section .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            padding: 1.5rem;
-        }
-
-        .bootstrap-section .card-body {
-            padding: 2rem;
-        }
-
-        .bootstrap-section .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            padding: 12px 30px;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .bootstrap-section .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-        }
     }
 </style>
 @endpush
@@ -204,76 +169,10 @@
     </div>
 </section>
 
-<!-- Section Bootstrap ajoutée -->
-<section class="bootstrap-section">
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card shadow-lg">
-                    <div class="card-header bg-primary text-white">
-                        <h4 class="mb-0">Passer une commande</h4>
-                    </div>
-                    <div class="card-body">
-                        @if(session('error'))
-                            <div class="alert alert-danger">{{ session('error') }}</div>
-                        @endif
-
-                        <!-- Formulaire Bootstrap simple -->
-                        <form action="{{ route('orders.process') }}" method="POST" id="bootstrap-order-form">
-                            @csrf
-
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label for="bootstrap_name" class="form-label">Nom complet</label>
-                                    <input type="text" class="form-control" id="bootstrap_name" name="name" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="bootstrap_phone" class="form-label">Téléphone</label>
-                                    <input type="tel" class="form-control" id="bootstrap_phone" name="phone" required>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="bootstrap_email" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="bootstrap_email" name="email">
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="bootstrap_address" class="form-label">Adresse de livraison</label>
-                                <textarea class="form-control" id="bootstrap_address" name="address" rows="3" required></textarea>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="bootstrap_city" class="form-label">Ville</label>
-                                <select class="form-select" id="bootstrap_city" name="city" required>
-                                    <option value="">Sélectionnez votre ville</option>
-                                    <option value="Cotonou">Cotonou</option>
-                                    <option value="Calavi">Abomey-Calavi</option>
-                                    <option value="Porto-Novo">Porto-Novo</option>
-                                    <option value="Ouidah">Ouidah</option>
-                                    <option value="Centre/Nord">Villes du Centre et du Nord</option>
-                                </select>
-                            </div>
-
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="fas fa-shopping-cart me-2"></i>
-                                    Finaliser la commande
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
 <section class="py-16 bg-slate-50">
     <div class="container mx-auto px-4">
         <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-12">
 
-            <!-- Formulaire de commande principal -->
             <div class="lg:col-span-2">
                 <div class="form-card">
                     <div class="form-section-title">
@@ -284,7 +183,6 @@
                     <form action="{{ route('orders.store') }}" method="POST" id="order-form">
                         @csrf
 
-                        <!-- Informations de contact -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="input-group">
                                 <label for="name" class="input-label">Nom & Prénoms *</label>
@@ -310,7 +208,6 @@
 
                         <hr class="my-8 border-gray-200">
 
-                        <!-- Adresse de livraison -->
                         <div class="form-section-title">
                             <i class="fas fa-shipping-fast"></i>
                             Adresse de livraison
@@ -339,12 +236,10 @@
                         </div>
                         <p class="text-sm text-gray-500 -mt-4 mb-8">Plus l'adresse est précise, plus la livraison sera rapide</p>
 
-                        <!-- Champ caché pour product_id si commande simple -->
                         @if(count($cartItems) === 1)
                             <input type="hidden" name="product_id" value="{{ $cartItems[0]['product']->id }}">
                         @endif
 
-                        <!-- Informations de livraison -->
                         <div class="bg-gradient-to-r from-indigo-50 to-sky-50 p-6 rounded-xl mb-8">
                             <div class="flex items-center mb-4">
                                 <i class="fas fa-truck text-indigo-600 text-2xl mr-3"></i>
@@ -375,13 +270,11 @@
                             </div>
                         </div>
 
-                        <!-- Bouton de soumission -->
                         <button type="submit" id="submit-button" class="fedapay-btn">
                             <i class="fas fa-lock mr-3"></i>
                             <span id="button-text">Payer en toute sécurité</span>
                         </button>
 
-                        <!-- Indicateur de chargement -->
                         <div id="loading-spinner" class="mt-4 text-center hidden">
                             <div class="spinner"></div>
                             <span class="text-gray-600">Redirection vers FedaPay...</span>
@@ -390,7 +283,6 @@
                 </div>
             </div>
 
-            <!-- Récapitulatif de commande -->
             <div class="lg:col-span-1">
                 <div class="summary-card">
                     <div class="flex items-center justify-between mb-6">
@@ -402,7 +294,6 @@
                         @endif
                     </div>
 
-                    <!-- Liste des produits -->
                     <div class="space-y-4 mb-6">
                         @foreach($cartItems as $item)
                             <div class="product-card">
@@ -415,7 +306,6 @@
                                         <p class="text-gray-600 text-xs">{{ number_format($item['product']->price, 0, ',', ' ') }} CFA</p>
 
                                         <div class="flex items-center justify-between mt-2">
-                                            <!-- Contrôles de quantité -->
                                             <div class="quantity-controls">
                                                 <button type="button" class="quantity-btn rounded-l" data-action="decrement" data-product-id="{{ $item['product']->id }}">-</button>
                                                 <input type="number" name="quantities[{{ $item['product']->id }}]"
@@ -431,7 +321,6 @@
                         @endforeach
                     </div>
 
-                    <!-- Résumé des coûts -->
                     <div class="space-y-3">
                         <div class="summary-item">
                             <span class="text-gray-600">Sous-total</span>
@@ -455,7 +344,6 @@
                         </div>
                     </div>
 
-                    <!-- Modes de paiement -->
                     <div class="mt-8 p-4 bg-gray-50 rounded-xl">
                         <h4 class="font-semibold text-gray-900 mb-3 flex items-center">
                             <i class="fas fa-shield-alt text-emerald-500 mr-2"></i>
@@ -486,7 +374,6 @@
     </div>
 </section>
 
-<!-- Overlay de chargement -->
 <div id="loading-overlay" class="loading-overlay hidden">
     <div class="loading-content">
         <div class="spinner"></div>
@@ -501,10 +388,8 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Éléments du DOM
     const form = document.getElementById('order-form');
-    const bootstrapForm = document.getElementById('bootstrap-order-form');
     const submitButton = document.getElementById('submit-button');
     const buttonText = document.getElementById('button-text');
-    const loadingSpinner = document.getElementById('loading-spinner');
     const loadingOverlay = document.getElementById('loading-overlay');
     const citySelect = document.getElementById('city');
     const shippingFeeSpan = document.getElementById('shipping-fee');
@@ -544,13 +429,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /**
-     * Calcule les frais de livraison selon le total et la ville
+     * Calcule les frais de livraison selon le total et la ville (logique identique au contrôleur)
      */
     function calculateShippingFee(baseFee, orderTotal) {
-        if (orderTotal >= 2000 && orderTotal < 50000) {
+        if (orderTotal >= 200000) { // 200 000 CFA et plus
             return { fee: 0, status: 'Offerte', class: 'shipping-free' };
-        } else if (orderTotal >= 50000) {
+        } else if (orderTotal >= 50000) { // 50 000 CFA et plus
             return { fee: Math.floor(baseFee / 2), status: '-50%', class: 'shipping-half' };
+        } else if (orderTotal >= 2000) { // 2 000 CFA et plus (mais moins de 50 000)
+            return { fee: 0, status: 'Offerte', class: 'shipping-free' };
         } else {
             return { fee: baseFee, status: 'Standard', class: 'shipping-full' };
         }
@@ -692,54 +579,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /**
-     * Gestion du formulaire Bootstrap
-     */
-    if (bootstrapForm) {
-        bootstrapForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            // Validation simple
-            const requiredBootstrapFields = this.querySelectorAll('[required]');
-            let isValid = true;
-
-            requiredBootstrapFields.forEach(field => {
-                if (!field.value.trim()) {
-                    field.classList.add('is-invalid');
-                    isValid = false;
-                } else {
-                    field.classList.remove('is-invalid');
-                    field.classList.add('is-valid');
-                }
-            });
-
-            if (!isValid) {
-                showMessage('Veuillez remplir tous les champs obligatoires');
-                return;
-            }
-
-            // Simuler le traitement de la commande
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Traitement...';
-
-            // Simuler une requête
-            setTimeout(() => {
-                showMessage('Commande traitée avec succès!', 'success');
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
-
-                // Réinitialiser le formulaire
-                this.reset();
-                requiredBootstrapFields.forEach(field => {
-                    field.classList.remove('is-invalid', 'is-valid');
-                });
-            }, 2000);
-        });
-    }
-
-    /**
      * Soumission du formulaire principal
      */
     if (form) {
@@ -857,9 +696,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Initialisation
-    if (typeof updateTotals === 'function') {
-        updateTotals();
-    }
+    updateTotals();
 
     // Gestion des messages flash Laravel
     @if(session('success'))
