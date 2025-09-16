@@ -56,6 +56,40 @@
 .bulk-actions.show {
     display: block;
 }
+
+.modal-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+}
+
+.modal-icon.success { background-color: #dcfce7; color: #16a34a; }
+.modal-icon.warning { background-color: #fef3c7; color: #d97706; }
+.modal-icon.danger { background-color: #fecaca; color: #dc2626; }
+.modal-icon.info { background-color: #dbeafe; color: #2563eb; }
+
+.order-details {
+    background-color: #f8fafc;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.loading-spinner {
+    display: none;
+}
+
+.loading .loading-spinner {
+    display: inline-block;
+}
+
+.loading .btn-text {
+    display: none;
+}
 </style>
 @endsection
 
@@ -214,16 +248,16 @@
             <div class="d-flex justify-content-between align-items-center">
                 <span id="selectedCount">0 commande(s) sélectionnée(s)</span>
                 <div class="btn-group">
-                    <button type="button" class="btn btn-sm btn-success" onclick="bulkUpdateStatus('processing')">
+                    <button type="button" class="btn btn-sm btn-success" onclick="openBulkStatusModal('processing')">
                         <i class="bx bx-check"></i> Marquer en cours
                     </button>
-                    <button type="button" class="btn btn-sm btn-info" onclick="bulkUpdateStatus('shipped')">
+                    <button type="button" class="btn btn-sm btn-info" onclick="openBulkStatusModal('shipped')">
                         <i class="bx bx-package"></i> Marquer expédiées
                     </button>
-                    <button type="button" class="btn btn-sm btn-primary" onclick="bulkUpdateStatus('delivered')">
+                    <button type="button" class="btn btn-sm btn-primary" onclick="openBulkStatusModal('delivered')">
                         <i class="bx bx-check-circle"></i> Marquer livrées
                     </button>
-                    <button type="button" class="btn btn-sm btn-danger" onclick="bulkUpdateStatus('cancelled')">
+                    <button type="button" class="btn btn-sm btn-danger" onclick="openBulkStatusModal('cancelled')">
                         <i class="bx bx-x"></i> Annuler
                     </button>
                 </div>
@@ -360,21 +394,21 @@
 
                                                 @if($orderGroup->status !== 'processing')
                                                 <li><a class="dropdown-item" href="#"
-                                                       onclick="updateOrderStatus('{{ $orderGroup->order_group }}', 'processing')">
+                                                       onclick="openStatusModal('{{ $orderGroup->order_group }}', 'processing')">
                                                     <i class="bx bx-play text-info"></i> En cours
                                                 </a></li>
                                                 @endif
 
                                                 @if($orderGroup->status !== 'shipped')
                                                 <li><a class="dropdown-item" href="#"
-                                                       onclick="updateOrderStatus('{{ $orderGroup->order_group }}', 'shipped')">
+                                                       onclick="openStatusModal('{{ $orderGroup->order_group }}', 'shipped')">
                                                     <i class="bx bx-package text-warning"></i> Expédiée
                                                 </a></li>
                                                 @endif
 
                                                 @if($orderGroup->status !== 'delivered')
                                                 <li><a class="dropdown-item" href="#"
-                                                       onclick="updateOrderStatus('{{ $orderGroup->order_group }}', 'delivered')">
+                                                       onclick="openStatusModal('{{ $orderGroup->order_group }}', 'delivered')">
                                                     <i class="bx bx-check-circle text-success"></i> Livrée
                                                 </a></li>
                                                 @endif
@@ -382,14 +416,7 @@
                                                 @if(!in_array($orderGroup->status, ['delivered', 'cancelled']))
                                                 <li><hr class="dropdown-divider"></li>
                                                 <li><a class="dropdown-item text-danger" href="#"
-                                                       onclick="updateOrderStatus('{{ $orderGroup->order_group }}', 'cancelled')">
-                                                    <i class="bx bx-x"></i> Annuler
-                                                </a></li>
-                                                @endif
-
-                                                <li><hr class="dropdown-divider"></li>
-                                                <li><a class="dropdown-item text-danger" href="#"
-                                                       onclick="deleteOrder('{{ $orderGroup->order_group }}')">
+                                                       onclick="openDeleteModal('{{ $orderGroup->order_group }}')">
                                                     <i class="bx bx-trash"></i> Supprimer
                                                 </a></li>
                                             </ul>
@@ -426,6 +453,129 @@
     </div>
 </div>
 
+<!-- Modals et JavaScript -->
+<!-- Modal de changement de statut individuel -->
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Changer le statut de la commande</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="modal-icon" id="statusIcon">
+                    <i class="bx bx-info-circle bx-lg"></i>
+                </div>
+                <h5 id="statusTitle">Confirmer l'action</h5>
+                <p id="statusMessage" class="text-muted mb-3"></p>
+
+                <div class="order-details" id="orderDetails">
+                    <div class="row">
+                        <div class="col-6">
+                            <strong>Commande:</strong>
+                            <div id="orderNumber"></div>
+                        </div>
+                        <div class="col-6">
+                            <strong>Statut actuel:</strong>
+                            <div id="currentStatus"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Commentaire (optionnel)</label>
+                    <textarea class="form-control" id="statusComment" rows="3" placeholder="Ajouter une note..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn" id="confirmStatusBtn" onclick="confirmStatusUpdate()">
+                    <span class="loading-spinner spinner-border spinner-border-sm me-2" role="status"></span>
+                    <span class="btn-text">Confirmer</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de changement de statut en lot -->
+<div class="modal fade" id="bulkStatusModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Changer le statut des commandes sélectionnées</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="modal-icon" id="bulkStatusIcon">
+                    <i class="bx bx-info-circle bx-lg"></i>
+                </div>
+                <h5 id="bulkStatusTitle">Confirmer l'action</h5>
+                <p id="bulkStatusMessage" class="text-muted mb-3"></p>
+
+                <div class="order-details">
+                    <div class="alert alert-info">
+                        <i class="bx bx-info-circle me-2"></i>
+                        <span id="bulkOrdersCount">0 commande(s) sélectionnée(s)</span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Commentaire (optionnel)</label>
+                    <textarea class="form-control" id="bulkStatusComment" rows="3" placeholder="Ajouter une note pour toutes les commandes..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn" id="confirmBulkStatusBtn" onclick="confirmBulkStatusUpdate()">
+                    <span class="loading-spinner spinner-border spinner-border-sm me-2" role="status"></span>
+                    <span class="btn-text">Confirmer</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de suppression -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Supprimer la commande</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="modal-icon danger">
+                    <i class="bx bx-trash bx-lg"></i>
+                </div>
+                <h5>Êtes-vous sûr ?</h5>
+                <p class="text-muted mb-3">Cette action est irréversible. La commande sera définitivement supprimée.</p>
+
+                <div class="order-details">
+                    <div class="row">
+                        <div class="col-12">
+                            <strong>Commande:</strong>
+                            <div id="deleteOrderNumber"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-danger mt-3">
+                    <i class="bx bx-error-circle me-2"></i>
+                    <small>Attention: Cette action ne peut pas être annulée.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn" onclick="confirmDelete()">
+                    <span class="loading-spinner spinner-border spinner-border-sm me-2" role="status"></span>
+                    <span class="btn-text">Supprimer définitivement</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal d'export -->
 <div class="modal fade" id="exportModal" tabindex="-1">
     <div class="modal-dialog">
@@ -447,6 +597,49 @@
                             <input type="date" class="form-control" name="date_to" required>
                         </div>
                     </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Format d'export</label>
+                        <select class="form-select" name="format">
+                            <option value="excel">Excel (.xlsx)</option>
+                            <option value="csv">CSV</option>
+                            <option value="pdf">PDF</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Colonnes à inclure</label>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="columns[]" value="order_number" checked>
+                                    <label class="form-check-label">Numéro de commande</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="columns[]" value="customer" checked>
+                                    <label class="form-check-label">Informations client</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="columns[]" value="products" checked>
+                                    <label class="form-check-label">Produits</label>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="columns[]" value="amounts" checked>
+                                    <label class="form-check-label">Montants</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="columns[]" value="status" checked>
+                                    <label class="form-check-label">Statuts</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="columns[]" value="dates" checked>
+                                    <label class="form-check-label">Dates</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
@@ -458,10 +651,65 @@
         </div>
     </div>
 </div>
+
+<!-- Modal de notification -->
+<div class="modal fade" id="notificationModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <div class="modal-icon" id="notificationIcon">
+                    <i class="bx bx-check bx-lg"></i>
+                </div>
+                <h5 id="notificationTitle">Opération réussie</h5>
+                <p id="notificationMessage" class="text-muted mb-0"></p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('page-js')
 <script>
+// Variables globales pour les modals
+let currentOrderGroup = null;
+let currentStatus = null;
+let selectedOrderGroups = [];
+
+// Configuration des statuts
+const statusConfig = {
+    processing: {
+        title: 'Marquer en cours de traitement',
+        message: 'Cette commande sera marquée comme étant en cours de traitement.',
+        icon: 'bx-play',
+        iconClass: 'info',
+        btnClass: 'btn-info'
+    },
+    shipped: {
+        title: 'Marquer comme expédiée',
+        message: 'Cette commande sera marquée comme expédiée.',
+        icon: 'bx-package',
+        iconClass: 'warning',
+        btnClass: 'btn-warning'
+    },
+    delivered: {
+        title: 'Marquer comme livrée',
+        message: 'Cette commande sera marquée comme livrée.',
+        icon: 'bx-check-circle',
+        iconClass: 'success',
+        btnClass: 'btn-success'
+    },
+    cancelled: {
+        title: 'Annuler la commande',
+        message: 'Cette commande sera marquée comme annulée.',
+        icon: 'bx-x',
+        iconClass: 'danger',
+        btnClass: 'btn-danger'
+    }
+};
+
 // Gestion des sélections multiples
 function toggleSelectAll() {
     const selectAll = document.getElementById('selectAll');
@@ -479,6 +727,8 @@ function updateBulkActions() {
     const bulkActions = document.getElementById('bulkActions');
     const selectedCount = document.getElementById('selectedCount');
 
+    selectedOrderGroups = Array.from(checkboxes).map(cb => cb.value);
+
     if (checkboxes.length > 0) {
         bulkActions.classList.add('show');
         selectedCount.textContent = checkboxes.length + ' commande(s) sélectionnée(s)';
@@ -488,19 +738,133 @@ function updateBulkActions() {
     }
 }
 
-// Mise à jour en lot
-function bulkUpdateStatus(status) {
-    const checkboxes = document.querySelectorAll('.order-checkbox:checked');
-    const orderGroups = Array.from(checkboxes).map(cb => cb.value);
+// Modal de changement de statut individuel
+function openStatusModal(orderGroup, status) {
+    currentOrderGroup = orderGroup;
+    currentStatus = status;
 
-    if (orderGroups.length === 0) {
-        showAlert('Veuillez sélectionner au moins une commande', 'warning');
+    const config = statusConfig[status];
+    const modal = new bootstrap.Modal(document.getElementById('statusModal'));
+
+    // Configuration de l'icône et du style
+    const icon = document.getElementById('statusIcon');
+    const iconEl = icon.querySelector('i');
+
+    icon.className = `modal-icon ${config.iconClass}`;
+    iconEl.className = `bx ${config.icon} bx-lg`;
+
+    // Configuration du contenu
+    document.getElementById('statusTitle').textContent = config.title;
+    document.getElementById('statusMessage').textContent = config.message;
+    document.getElementById('orderNumber').textContent = '#' + orderGroup.substr(0, 8);
+
+    // Configuration du bouton
+    const btn = document.getElementById('confirmStatusBtn');
+    btn.className = `btn ${config.btnClass}`;
+
+    // Reset du formulaire
+    document.getElementById('statusComment').value = '';
+
+    modal.show();
+}
+
+// Modal de changement de statut en lot
+function openBulkStatusModal(status) {
+    if (selectedOrderGroups.length === 0) {
+        showNotification('Veuillez sélectionner au moins une commande', 'warning');
         return;
     }
 
-    if (!confirm(`Êtes-vous sûr de vouloir changer le statut de ${orderGroups.length} commande(s) ?`)) {
-        return;
-    }
+    currentStatus = status;
+
+    const config = statusConfig[status];
+    const modal = new bootstrap.Modal(document.getElementById('bulkStatusModal'));
+
+    // Configuration de l'icône et du style
+    const icon = document.getElementById('bulkStatusIcon');
+    const iconEl = icon.querySelector('i');
+
+    icon.className = `modal-icon ${config.iconClass}`;
+    iconEl.className = `bx ${config.icon} bx-lg`;
+
+    // Configuration du contenu
+    document.getElementById('bulkStatusTitle').textContent = config.title;
+    document.getElementById('bulkStatusMessage').textContent =
+        `${selectedOrderGroups.length} commande(s) seront marquées avec ce nouveau statut.`;
+    document.getElementById('bulkOrdersCount').textContent =
+        `${selectedOrderGroups.length} commande(s) sélectionnée(s)`;
+
+    // Configuration du bouton
+    const btn = document.getElementById('confirmBulkStatusBtn');
+    btn.className = `btn ${config.btnClass}`;
+
+    // Reset du formulaire
+    document.getElementById('bulkStatusComment').value = '';
+
+    modal.show();
+}
+
+// Modal de suppression
+function openDeleteModal(orderGroup) {
+    currentOrderGroup = orderGroup;
+
+    document.getElementById('deleteOrderNumber').textContent = '#' + orderGroup.substr(0, 8);
+
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+// Confirmation de changement de statut individuel
+function confirmStatusUpdate() {
+    const btn = document.getElementById('confirmStatusBtn');
+    const comment = document.getElementById('statusComment').value;
+
+    setLoading(btn, true);
+
+    const data = {
+        status: currentStatus,
+        comment: comment
+    };
+
+    fetch(`{{ route('admin.orders.index') }}/${currentOrderGroup}/update-status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        setLoading(btn, false);
+
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('statusModal')).hide();
+            showNotification(data.message, 'success');
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            showNotification(data.message || 'Erreur lors de la mise à jour', 'error');
+        }
+    })
+    .catch(error => {
+        setLoading(btn, false);
+        console.error('Erreur:', error);
+        showNotification('Erreur lors de la mise à jour', 'error');
+    });
+}
+
+// Confirmation de changement de statut en lot
+function confirmBulkStatusUpdate() {
+    const btn = document.getElementById('confirmBulkStatusBtn');
+    const comment = document.getElementById('bulkStatusComment').value;
+
+    setLoading(btn, true);
+
+    const data = {
+        order_groups: selectedOrderGroups,
+        status: currentStatus,
+        comment: comment
+    };
 
     fetch('{{ route("admin.orders.updateStatus") }}', {
         method: 'POST',
@@ -508,61 +872,34 @@ function bulkUpdateStatus(status) {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         },
-        body: JSON.stringify({
-            order_groups: orderGroups,
-            status: status
-        })
+        body: JSON.stringify(data)
     })
     .then(response => response.json())
     .then(data => {
-        if (data.message) {
-            showAlert(data.message, 'success');
-            setTimeout(() => location.reload(), 1500);
+        setLoading(btn, false);
+
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('bulkStatusModal')).hide();
+            showNotification(data.message, 'success');
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            showNotification(data.message || 'Erreur lors de la mise à jour', 'error');
         }
     })
     .catch(error => {
+        setLoading(btn, false);
         console.error('Erreur:', error);
-        showAlert('Erreur lors de la mise à jour', 'error');
+        showNotification('Erreur lors de la mise à jour', 'error');
     });
 }
 
-// Mise à jour individuelle
-function updateOrderStatus(orderGroup, status) {
-    if (!confirm('Êtes-vous sûr de vouloir changer le statut de cette commande ?')) {
-        return;
-    }
+// Confirmation de suppression
+function confirmDelete() {
+    const btn = document.getElementById('confirmDeleteBtn');
 
-    fetch('{{ route("admin.orders.updateStatus") }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({
-            order_groups: [orderGroup],
-            status: status
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.message) {
-            showAlert(data.message, 'success');
-            setTimeout(() => location.reload(), 1500);
-        }
-    })
-    .catch(error => {
-        console.error('Erreur:', error);
-        showAlert('Erreur lors de la mise à jour', 'error');
-    });
-}
+    setLoading(btn, true);
 
-// Suppression
-function deleteOrder(orderGroup) {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette commande ? Cette action est irréversible.')) {
-        return;
-    }
-
-    fetch(`/admin/orders/${orderGroup}`, {
+    fetch(`{{ route('admin.orders.index') }}/${currentOrderGroup}`, {
         method: 'DELETE',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
@@ -570,34 +907,66 @@ function deleteOrder(orderGroup) {
     })
     .then(response => response.json())
     .then(data => {
-        if (data.message) {
-            showAlert(data.message, 'success');
-            setTimeout(() => location.reload(), 1500);
+        setLoading(btn, false);
+
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+            showNotification(data.message, 'success');
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            showNotification(data.message || 'Erreur lors de la suppression', 'error');
         }
     })
     .catch(error => {
+        setLoading(btn, false);
         console.error('Erreur:', error);
-        showAlert('Erreur lors de la suppression', 'error');
+        showNotification('Erreur lors de la suppression', 'error');
     });
 }
 
-// Fonction d'alerte
-function showAlert(message, type = 'info') {
-    const alertContainer = document.querySelector('.container-xxl.flex-grow-1.container-p-y');
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
-    alertDiv.innerHTML = `
-        <i class="bx bx-${type === 'success' ? 'check' : type === 'error' ? 'error' : 'info'}-circle me-2"></i>
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    alertContainer.insertBefore(alertDiv, alertContainer.firstChild);
+// Fonctions utilitaires
+function setLoading(btn, loading) {
+    if (loading) {
+        btn.classList.add('loading');
+        btn.disabled = true;
+    } else {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+    }
+}
 
-    setTimeout(() => {
-        if (alertDiv.parentNode) {
-            alertDiv.remove();
-        }
-    }, 5000);
+function showNotification(message, type = 'info') {
+    const modal = new bootstrap.Modal(document.getElementById('notificationModal'));
+    const icon = document.getElementById('notificationIcon');
+    const iconEl = icon.querySelector('i');
+    const title = document.getElementById('notificationTitle');
+    const messageEl = document.getElementById('notificationMessage');
+
+    // Configuration selon le type
+    switch(type) {
+        case 'success':
+            icon.className = 'modal-icon success';
+            iconEl.className = 'bx bx-check bx-lg';
+            title.textContent = 'Opération réussie';
+            break;
+        case 'error':
+            icon.className = 'modal-icon danger';
+            iconEl.className = 'bx bx-error bx-lg';
+            title.textContent = 'Erreur';
+            break;
+        case 'warning':
+            icon.className = 'modal-icon warning';
+            iconEl.className = 'bx bx-error-circle bx-lg';
+            title.textContent = 'Attention';
+            break;
+        default:
+            icon.className = 'modal-icon info';
+            iconEl.className = 'bx bx-info-circle bx-lg';
+            title.textContent = 'Information';
+    }
+
+    messageEl.textContent = message;
+    modal.show();
 }
 
 // Initialisation
@@ -613,6 +982,81 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 500);
         });
     }
+
+    // Gestion des modals
+    document.getElementById('statusModal').addEventListener('hidden.bs.modal', function () {
+        currentOrderGroup = null;
+        currentStatus = null;
+    });
+
+    document.getElementById('bulkStatusModal').addEventListener('hidden.bs.modal', function () {
+        currentStatus = null;
+    });
+
+    document.getElementById('deleteModal').addEventListener('hidden.bs.modal', function () {
+        currentOrderGroup = null;
+    });
+
+    // Auto-fermeture des notifications
+    document.getElementById('notificationModal').addEventListener('shown.bs.modal', function () {
+        setTimeout(() => {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('notificationModal'));
+            if (modal) {
+                modal.hide();
+            }
+        }, 3000);
+    });
+});
+
+// Gestion des raccourcis clavier
+document.addEventListener('keydown', function(e) {
+    // Échap pour fermer les modals
+    if (e.key === 'Escape') {
+        const openModals = document.querySelectorAll('.modal.show');
+        openModals.forEach(modal => {
+            const modalInstance = bootstrap.Modal.getInstance(modal);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+        });
+    }
+
+    // Ctrl+A pour tout sélectionner
+    if (e.ctrlKey && e.key === 'a' && !e.target.matches('input, textarea')) {
+        e.preventDefault();
+        document.getElementById('selectAll').checked = true;
+        toggleSelectAll();
+    }
+});
+
+// Export avec feedback
+document.querySelector('#exportModal form').addEventListener('submit', function(e) {
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+
+    submitBtn.innerHTML = '<i class="bx bx-loader bx-spin"></i> Génération...';
+    submitBtn.disabled = true;
+
+    // Restaurer le bouton après 3 secondes
+    setTimeout(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+        bootstrap.Modal.getInstance(document.getElementById('exportModal')).hide();
+    }, 3000);
+});
+
+// Animation des cartes statistiques au survol
+document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-2px)';
+        this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+        this.style.transition = 'all 0.2s ease';
+    });
+
+    card.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+        this.style.boxShadow = '';
+    });
 });
 </script>
 @endsection

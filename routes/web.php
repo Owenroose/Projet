@@ -10,6 +10,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\Admin\DeliveryController;
 use App\Http\Controllers\Admin\AdminRoleController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminOrderController;
@@ -59,8 +60,8 @@ Route::prefix('orders')->name('orders.')->group(function () {
     Route::get('/create/{slug?}', [OrderController::class, 'create'])->name('create');
     Route::post('/store', [OrderController::class, 'store'])->name('store');
 
-    // Routes pour FedaPay - CORRIGÉES
-    Route::post('/payment/callback', [OrderController::class, 'handleCallback'])->name('payment.callback');
+    // Routes pour FedaPay
+    Route::get('/payment/callback', [OrderController::class, 'handleCallback'])->name('payment.callback');
     Route::get('/payment/cancel', [OrderController::class, 'cancel'])->name('cancel');
 
     // Route de succès de commande (après le paiement)
@@ -73,6 +74,16 @@ Route::prefix('orders')->name('orders.')->group(function () {
     Route::get('/failure', function () {
         return view('orders.failure');
     })->name('failure');
+});
+
+Route::get('order/{order_group}/track', [OrderController::class, 'track'])->name('order.track');
+
+// AJOUT DE LA ROUTE DASHBOARD PRINCIPALE
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Route dashboard générale qui redirige vers admin.dashboard
+    Route::get('/dashboard', function () {
+        return redirect()->route('admin.dashboard');
+    })->name('dashboard');
 });
 
 // Admin Routes
@@ -93,7 +104,23 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::resource('testimonials', AdminTestimonialController::class);
 
     // Routes pour l'équipe
-    Route::resource('team-members', AdminTeamMemberController::class);
+    Route::resource('team', AdminTeamMemberController::class)->names([
+        'index' => 'team.index',
+        'create' => 'team.create',
+        'store' => 'team.store',
+        'show' => 'team.show',
+        'edit' => 'team.edit',
+        'update' => 'team.update',
+        'destroy' => 'team.destroy'
+    ])->parameters([
+        'team' => 'teamMember'
+    ]);
+
+    // Routes additionnelles pour l'équipe
+    Route::prefix('team')->name('team.')->group(function () {
+        Route::post('/{teamMember}/toggle-published', [AdminTeamMemberController::class, 'togglePublished'])->name('toggle-published');
+        Route::post('/reorder', [AdminTeamMemberController::class, 'reorder'])->name('reorder');
+    });
 
     // Routes pour les contacts
     Route::resource('contacts', AdminContactController::class)->except(['create', 'store']);
@@ -158,18 +185,27 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::controller(AdminOrderController::class)->prefix('orders')->name('orders.')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/dashboard', 'dashboard')->name('dashboard');
-        Route::get('/{order}', 'show')->name('show');
-        Route::delete('/{order}', 'destroy')->name('destroy');
+        Route::get('/{orderGroup}', 'show')->name('show');
+        Route::delete('/{orderGroup}', 'destroy')->name('destroy');
 
-        // Actions AJAX - CORRECTION ICI
-        Route::post('/update-status', 'updateStatus')->name('updateStatus'); // Route sans paramètre
-        Route::post('/{order}/note', 'addNote')->name('add-note');
-        Route::patch('/{order}/priority', 'togglePriority')->name('toggle-priority');
+        // Actions AJAX
+        Route::post('/update-status', 'updateStatusBulk')->name('updateStatus');
+        Route::post('/{orderGroup}/update-status', 'updateStatus')->name('updateStatusSingle');
+        Route::post('/{orderGroup}/assign-driver', 'assignDriver')->name('assignDriver');
+        Route::post('/{orderGroup}/note', 'addNote')->name('add-note');
+        Route::patch('/{orderGroup}/priority', 'togglePriority')->name('toggle-priority');
 
         // Recherche et rapports
         Route::get('/search/autocomplete', 'searchAutocomplete')->name('search-autocomplete');
         Route::post('/generate-report', 'generateReport')->name('generate-report');
-        Route::post('/export', 'export')->name('export'); // Ajout de la route export
+        Route::post('/export', 'export')->name('export');
+    });
+
+    // Routes pour la livraison
+    Route::prefix('delivery')->name('delivery.')->middleware(['role:driver'])->group(function () {
+        Route::get('/', [DeliveryController::class, 'index'])->name('index');
+        Route::get('/{orderGroup}', [DeliveryController::class, 'show'])->name('show');
+        Route::post('/{orderGroup}/validate', [DeliveryController::class, 'validateDelivery'])->name('validate');
     });
 
     // Routes pour les rôles

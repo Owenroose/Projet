@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
+use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Delivery;
+use App\Models\OrderHistory;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
 
 class AdminOrderController extends Controller
 {
@@ -188,61 +191,137 @@ class AdminOrderController extends Controller
      */
     public function show($orderGroup)
     {
-        $orders = Order::where('order_group', $orderGroup)->with('product')->get();
+        // Votre code existant pour récupérer les détails de la commande
+        $orders = Order::where('order_group', $orderGroup)
+                       ->with('product')
+                       ->get();
 
         if ($orders->isEmpty()) {
-            abort(404, 'Commande non trouvée.');
+            abort(404);
         }
 
-        // Informations générales de la commande
         $orderInfo = $orders->first();
+        $orderInfo->items = $orders;
+        $orderInfo->products_total = $orders->sum('subtotal');
+        $orderInfo->shipping_fee = $orders->first()->shipping_fee ?? 0;
+        $orderInfo->total_with_shipping = $orderInfo->products_total + $orderInfo->shipping_fee;
 
-        // Calculer les totaux
-        $productsTotal = $orders->sum('subtotal');
-        $shippingFee = $orderInfo->shipping_fee;
-        $totalAmount = $orderInfo->total_amount;
+        // Charger l'historique de la commande
+        $history = OrderHistory::where('order_group', $orderGroup)
+                               ->with('user')
+                               ->orderBy('created_at', 'desc')
+                               ->get();
 
-        return view('admin.orders.show', compact('orders', 'orderInfo', 'productsTotal', 'shippingFee', 'totalAmount'));
+        // Charger l'affectation de la livraison
+        $delivery = Delivery::where('order_group', $orderGroup)->with('driver')->first();
+
+        // Récupérer la liste des utilisateurs avec le rôle 'livreur'
+        $drivers = User::where('role', 'driver')->get();
+
+        return view('admin.orders.show', compact('orderInfo', 'history', 'delivery', 'drivers'));
+    }
+
+    /**
+     * Affecte un livreur à une commande.
+     */
+    public function assignDriver(Request $request, $orderGroup)
+    {
+        $request->validate([
+            'driver_id' => 'required|exists:users,id',
+        ]);
+
+        $order = Order::where('order_group', $orderGroup)->firstOrFail();
+
+        // Vérifiez si une livraison existe déjà pour cette commande
+        $delivery = Delivery::firstOrNew(['order_group' => $orderGroup]);
+
+        // Enregistrer l'affectation
+        $delivery->driver_id = $request->driver_id;
+        $delivery->status = 'assigned';
+        $delivery->save();
+
+        // Enregistrer l'action dans l'historique
+        OrderHistory::create([
+            'order_group' => $orderGroup,
+            'status_before' => $order->status,
+            'status_after' => $order->status,
+            'action' => 'delivery_assignment',
+            'user_id' => auth()->id(), // ID de l'admin qui affecte
+            'notes' => 'Affectation au livreur : ' . $delivery->driver->name,
+        ]);
+
+        return redirect()->back()->with('success', 'Livreur affecté avec succès.');
     }
 
     /**
      * Met à jour le statut d'une ou plusieurs commandes.
      */
-    public function updateStatus(Request $request)
+    public function updateStatus(Request $request, $orderGroup)
     {
         $request->validate([
-            'order_groups' => 'required|array',
-            'status' => 'required|string|in:pending,processing,shipped,delivered,cancelled',
+            'status' => 'required|in:pending,processing,shipped,delivered,cancelled',
+            'notes' => 'nullable|string'
         ]);
 
-        $orderGroups = $request->input('order_groups');
+        $order = Order::where('order_group', $orderGroup)->firstOrFail();
+        $oldStatus = $order->status;
         $newStatus = $request->input('status');
 
-        try {
-            DB::beginTransaction();
+        if ($oldStatus === $newStatus) {
+            return redirect()->back()->with('info', 'Le statut n\'a pas changé.');
+        }
 
-            $updated = Order::whereIn('order_group', $orderGroups)->update([
+        // Vérifiez si le changement de statut est valide
+        if (!in_array($newStatus, ['processing', 'shipped', 'delivered', 'cancelled'])) {
+             return redirect()->back()->with('error', 'Changement de statut invalide.');
+        }
+
+        DB::beginTransaction();
+        try {
+            // Mettre à jour le statut pour toutes les commandes du groupe
+            Order::where('order_group', $orderGroup)->update([
                 'status' => $newStatus,
-                'updated_at' => now()
+                'updated_at' => now(),
+                // Mettre à jour les timestamps si nécessaire
+                'shipped_at' => ($newStatus === 'shipped' && is_null($order->shipped_at)) ? now() : $order->shipped_at,
+                'delivered_at' => ($newStatus === 'delivered' && is_null($order->delivered_at)) ? now() : $order->delivered_at,
             ]);
+
+            // Enregistrer l'historique de l'action
+            OrderHistory::create([
+                'order_group' => $orderGroup,
+                'status_before' => $oldStatus,
+                'status_after' => $newStatus,
+                'action' => 'status_update',
+                'user_id' => auth()->id(),
+                'notes' => $request->input('notes'),
+            ]);
+
+            // Décrémenter le stock si le statut passe à 'processing'
+            if ($oldStatus === 'pending' && $newStatus === 'processing') {
+                $orders = Order::where('order_group', $orderGroup)->get();
+                foreach ($orders as $orderItem) {
+                    $product = Product::find($orderItem->product_id);
+                    if ($product) {
+                        $product->stock_quantity -= $orderItem->quantity;
+                        $product->save();
+                    }
+                }
+            }
+
+            // Notifier le client par e-mail
+            if ($order->customer_email && ($newStatus === 'processing' || $newStatus === 'shipped')) {
+                // Assurez-vous d'avoir créé la Mailable class
+                // Mail::to($order->customer_email)->send(new OrderStatusUpdate($orderGroup, $newStatus));
+            }
 
             DB::commit();
 
-            Log::info("Statut des commandes mis à jour", [
-                'order_groups' => $orderGroups,
-                'new_status' => $newStatus,
-                'updated_count' => $updated
-            ]);
-
-            return response()->json([
-                'message' => "Statut de {$updated} commande(s) mis à jour avec succès."
-            ]);
+            return redirect()->back()->with('success', 'Statut de la commande mis à jour avec succès.');
         } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Erreur lors de la mise à jour des statuts de commande: ' . $e->getMessage());
-            return response()->json([
-                'message' => 'Une erreur est survenue lors de la mise à jour des statuts.'
-            ], 500);
+            DB::rollback();
+            Log::error('Erreur lors de la mise à jour du statut de la commande: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Une erreur est survenue.');
         }
     }
 

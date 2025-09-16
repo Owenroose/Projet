@@ -5,41 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-/**
- * @property int $id
- * @property string $order_group
- * @property int $product_id
- * @property int $quantity
- * @property numeric $unit_price
- * @property numeric $subtotal
- * @property numeric $shipping_fee
- * @property numeric $total_amount
- * @property string $fedapay_transaction_id
- * @property string|null $fedapay_token
- * @property string $status
- * @property string $payment_status
- * @property string $customer_name
- * @property string|null $customer_email
- * @property string $customer_phone
- * @property string $customer_address
- * @property string $customer_city
- * @property \Illuminate\Support\Carbon|null $paid_at
- * @property \Illuminate\Support\Carbon|null $shipped_at
- * @property \Illuminate\Support\Carbon|null $delivered_at
- * @property string|null $notes
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Product $product
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Order newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Order newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Order pending()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Order processing()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Order shipped()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Order delivered()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Order cancelled()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Order query()
- * @mixin \Eloquent
- */
 class Order extends Model
 {
     use HasFactory;
@@ -67,18 +32,8 @@ class Order extends Model
         'notes',
     ];
 
-    protected $casts = [
-        'unit_price' => 'decimal:2',
-        'subtotal' => 'decimal:2',
-        'shipping_fee' => 'decimal:2',
-        'total_amount' => 'decimal:2',
-        'paid_at' => 'datetime',
-        'shipped_at' => 'datetime',
-        'delivered_at' => 'datetime',
-    ];
-
     /**
-     * Relation avec le produit
+     * Get the product associated with the order.
      */
     public function product()
     {
@@ -86,63 +41,31 @@ class Order extends Model
     }
 
     /**
-     * Scope pour les commandes en attente
+     * Get the order history for this order group.
      */
-    public function scopePending($query)
+    public function history()
     {
-        return $query->where('status', 'pending');
+        return $this->hasMany(OrderHistory::class, 'order_group', 'order_group');
     }
 
     /**
-     * Scope pour les commandes en traitement
+     * Get the delivery assignment for this order group.
      */
-    public function scopeProcessing($query)
+    public function delivery()
     {
-        return $query->where('status', 'processing');
+        return $this->hasOne(Delivery::class, 'order_group', 'order_group');
     }
 
     /**
-     * Scope pour les commandes expédiées
+     * Get the total amount formatted.
      */
-    public function scopeShipped($query)
-    {
-        return $query->where('status', 'shipped');
-    }
-
-    /**
-     * Scope pour les commandes livrées
-     */
-    public function scopeDelivered($query)
-    {
-        return $query->where('status', 'delivered');
-    }
-
-    /**
-     * Scope pour les commandes annulées
-     */
-    public function scopeCancelled($query)
-    {
-        return $query->where('status', 'cancelled');
-    }
-
-    /**
-     * Obtient le prix total formaté
-     */
-    public function getFormattedTotalAttribute()
+    public function getFormattedTotalAmountAttribute()
     {
         return number_format($this->total_amount, 0, ',', ' ') . ' FCFA';
     }
 
     /**
-     * Obtient le prix unitaire formaté
-     */
-    public function getFormattedUnitPriceAttribute()
-    {
-        return number_format($this->unit_price, 0, ',', ' ') . ' FCFA';
-    }
-
-    /**
-     * Obtient le sous-total formaté
+     * Get the subtotal formatted.
      */
     public function getFormattedSubtotalAttribute()
     {
@@ -150,7 +73,15 @@ class Order extends Model
     }
 
     /**
-     * Obtient les frais de livraison formatés
+     * Get the unit price formatted.
+     */
+    public function getFormattedUnitPriceAttribute()
+    {
+        return number_format($this->unit_price, 0, ',', ' ') . ' FCFA';
+    }
+
+    /**
+     * Get the shipping fee formatted.
      */
     public function getFormattedShippingFeeAttribute()
     {
@@ -164,7 +95,7 @@ class Order extends Model
     {
         $labels = [
             'pending' => 'En attente',
-            'processing' => 'En traitement',
+            'processing' => 'En cours de traitement',
             'shipped' => 'Expédiée',
             'delivered' => 'Livrée',
             'cancelled' => 'Annulée',
@@ -209,6 +140,6 @@ class Order extends Model
      */
     public function isCompleted()
     {
-        return in_array($this->status, ['delivered', 'cancelled']);
+        return $this->status === 'delivered';
     }
 }

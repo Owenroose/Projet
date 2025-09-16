@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Providers\RouteServiceProvider;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -26,11 +27,10 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
-        // Méthode alternative pour régénérer la session
-        Auth::guard('web')->login(Auth::user());
         $request->session()->regenerate();
 
-        return redirect()->intended(route('admin.dashboard', absolute: false));
+        // Redirection vers le dashboard admin après connexion
+        return redirect()->intended(route('admin.dashboard'));
     }
 
     /**
@@ -40,10 +40,10 @@ class AuthenticatedSessionController extends Controller
     {
         Auth::guard('web')->logout();
 
-        // Méthode alternative pour invalider la session
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
+        // SOLUTION : Redirection vers la page d'accueil après déconnexion
         return redirect('/');
     }
 }

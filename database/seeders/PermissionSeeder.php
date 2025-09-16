@@ -6,6 +6,8 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class PermissionSeeder extends Seeder
 {
@@ -14,238 +16,111 @@ class PermissionSeeder extends Seeder
      */
     public function run(): void
     {
+        // Vider les tables de permissions et de rôles
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        DB::table('model_has_roles')->truncate();
+        DB::table('model_has_permissions')->truncate();
+        DB::table('role_has_permissions')->truncate();
+        DB::table('roles')->truncate();
+        DB::table('permissions')->truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         // Créer toutes les permissions basées sur vos contrôleurs
         $permissions = [
-            // Permissions pour les rôles (AdminRoleController)
-            'read-role',
-            'create-role',
-            'update-role',
-            'delete-role',
-
-            // Permissions pour les utilisateurs (AdminUserController)
-            'read-user',
-            'create-user',
-            'update-user',
-            'delete-user',
-
-            // Permissions pour les projets (AdminProjectController)
-            'read-project',
-            'create-project',
-            'update-project',
-            'delete-project',
-
-            // Permissions pour les services (AdminServiceController)
-            'read-service',
-            'create-service',
-            'update-service',
-            'delete-service',
-            'toggle-service-published',
-
-            // Permissions pour les produits (AdminProductController)
-            'read-product',
-            'create-product',
-            'update-product',
-            'delete-product',
-
-            // Permissions pour les témoignages (AdminTestimonialController)
-            'read-testimonial',
-            'create-testimonial',
-            'update-testimonial',
-            'delete-testimonial',
-
-            // Permissions pour l'équipe (AdminTeamMemberController)
-            'read-team-member',
-            'create-team-member',
-            'update-team-member',
-            'delete-team-member',
-
-            // Permissions pour les contacts (AdminContactController)
-            'read-contact',
-            'update-contact',
-            'delete-contact',
-            'send-contact-response',
-            'mark-contact-read',
-            'mark-contact-unread',
-            'bulk-contact-action',
-
-            // Permissions pour le profil (AdminProfileController)
-            'view-profile',
-            'update-profile',
-
-            // Permissions pour l'assistant AI (AiAssistantController)
-            'use-ai-assistant',
-            'view-ai-stats',
-
-            // Permissions pour le tableau de bord
-            'view-admin-dashboard',
-            'view-dashboard',
-
-            // Permissions générales
+            'read-role', 'create-role', 'update-role', 'delete-role',
+            'read-user', 'create-user', 'update-user', 'delete-user',
+            'read-project', 'create-project', 'update-project', 'delete-project',
+            'read-service', 'create-service', 'update-service', 'delete-service', 'toggle-service-published',
+            'read-product', 'create-product', 'update-product', 'delete-product',
+            'read-testimonial', 'create-testimonial', 'update-testimonial', 'delete-testimonial',
+            'read-team-member', 'create-team-member', 'update-team-member', 'delete-team-member',
+            'read-contact', 'update-contact', 'delete-contact', 'send-contact-response', 'mark-contact-read', 'mark-contact-unread', 'bulk-contact-action',
+            'view-profile', 'update-profile',
+            'use-ai-assistant', 'view-ai-stats',
+            'read-order', 'create-order', 'update-order', 'delete-order', 'update-order-status', 'assign-driver', 'export-orders', 'view-order-dashboard',
+            'read-delivery', 'validate-delivery', 'manage-delivery',
+            'view-admin-dashboard', 'view-dashboard',
             'access-admin-panel',
         ];
 
         // Créer les permissions
         foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission]);
+            Permission::firstOrCreate(['name' => $permission]);
         }
 
         // Créer les rôles
-        $superAdminRole = Role::create(['name' => 'Super Admin']);
-        $adminRole = Role::create(['name' => 'Admin']);
-        $contentManagerRole = Role::create(['name' => 'Content Manager']);
-        $customerServiceRole = Role::create(['name' => 'Customer Service']);
-        $userRole = Role::create(['name' => 'User']);
+        $superAdminRole = Role::firstOrCreate(['name' => 'Super Admin']);
+        $adminRole = Role::firstOrCreate(['name' => 'Admin']);
+        $contentManagerRole = Role::firstOrCreate(['name' => 'Content Manager']);
+        $customerServiceRole = Role::firstOrCreate(['name' => 'Customer Service']);
+        $userRole = Role::firstOrCreate(['name' => 'User']);
+        $driverRole = Role::firstOrCreate(['name' => 'Livreur']);
 
         // Assigner toutes les permissions au Super Admin
-        $superAdminRole->givePermissionTo(Permission::all());
+        $superAdminRole->syncPermissions(Permission::all());
 
-        // Permissions pour l'Admin (presque tout sauf gestion des rôles et utilisateurs)
+        // Permissions pour les autres rôles
         $adminPermissions = [
-            'access-admin-panel',
-            'view-admin-dashboard',
-            'view-dashboard',
-
-            // Projets
-            'read-project',
-            'create-project',
-            'update-project',
-            'delete-project',
-
-            // Services
-            'read-service',
-            'create-service',
-            'update-service',
-            'delete-service',
-            'toggle-service-published',
-
-            // Produits
-            'read-product',
-            'create-product',
-            'update-product',
-            'delete-product',
-
-            // Témoignages
-            'read-testimonial',
-            'create-testimonial',
-            'update-testimonial',
-            'delete-testimonial',
-
-            // Équipe
-            'read-team-member',
-            'create-team-member',
-            'update-team-member',
-            'delete-team-member',
-
-            // Contacts
-            'read-contact',
-            'update-contact',
-            'delete-contact',
-            'send-contact-response',
-            'mark-contact-read',
-            'mark-contact-unread',
-            'bulk-contact-action',
-
-            // Profil
-            'view-profile',
-            'update-profile',
-
-            // AI Assistant
-            'use-ai-assistant',
-            'view-ai-stats',
+            'access-admin-panel', 'view-admin-dashboard', 'view-dashboard',
+            'read-project', 'create-project', 'update-project', 'delete-project',
+            'read-service', 'create-service', 'update-service', 'delete-service', 'toggle-service-published',
+            'read-product', 'create-product', 'update-product', 'delete-product',
+            'read-testimonial', 'create-testimonial', 'update-testimonial', 'delete-testimonial',
+            'read-team-member', 'create-team-member', 'update-team-member', 'delete-team-member',
+            'read-contact', 'update-contact', 'delete-contact', 'send-contact-response', 'mark-contact-read', 'mark-contact-unread', 'bulk-contact-action',
+            'read-order', 'update-order', 'delete-order', 'update-order-status', 'assign-driver', 'export-orders', 'view-order-dashboard',
+            'read-delivery', 'manage-delivery',
+            'view-profile', 'update-profile',
+            'use-ai-assistant', 'view-ai-stats',
         ];
-        $adminRole->givePermissionTo($adminPermissions);
+        $adminRole->syncPermissions($adminPermissions);
 
-        // Permissions pour le Content Manager (gestion du contenu)
         $contentManagerPermissions = [
-            'access-admin-panel',
-            'view-admin-dashboard',
-            'view-dashboard',
-
-            // Projets
-            'read-project',
-            'create-project',
-            'update-project',
-            'delete-project',
-
-            // Services
-            'read-service',
-            'create-service',
-            'update-service',
-            'delete-service',
-            'toggle-service-published',
-
-            // Produits
-            'read-product',
-            'create-product',
-            'update-product',
-            'delete-product',
-
-            // Témoignages
-            'read-testimonial',
-            'create-testimonial',
-            'update-testimonial',
-            'delete-testimonial',
-
-            // Équipe
-            'read-team-member',
-            'create-team-member',
-            'update-team-member',
-            'delete-team-member',
-
-            // Profil
-            'view-profile',
-            'update-profile',
-
-            // AI Assistant
-            'use-ai-assistant',
-            'view-ai-stats',
+            'access-admin-panel', 'view-admin-dashboard', 'view-dashboard',
+            'read-project', 'create-project', 'update-project', 'delete-project',
+            'read-service', 'create-service', 'update-service', 'delete-service', 'toggle-service-published',
+            'read-product', 'create-product', 'update-product', 'delete-product',
+            'read-testimonial', 'create-testimonial', 'update-testimonial', 'delete-testimonial',
+            'read-team-member', 'create-team-member', 'update-team-member', 'delete-team-member',
+            'view-profile', 'update-profile',
+            'use-ai-assistant', 'view-ai-stats',
         ];
-        $contentManagerRole->givePermissionTo($contentManagerPermissions);
+        $contentManagerRole->syncPermissions($contentManagerPermissions);
 
-        // Permissions pour Customer Service (gestion des contacts principalement)
         $customerServicePermissions = [
-            'access-admin-panel',
-            'view-admin-dashboard',
-            'view-dashboard',
-
-            // Contacts
-            'read-contact',
-            'update-contact',
-            'send-contact-response',
-            'mark-contact-read',
-            'mark-contact-unread',
-            'bulk-contact-action',
-
-            // Lecture seule pour le reste
-            'read-project',
-            'read-service',
-            'read-product',
-            'read-testimonial',
-            'read-team-member',
-
-            // Profil
-            'view-profile',
-            'update-profile',
-
-            // AI Assistant
+            'access-admin-panel', 'view-admin-dashboard', 'view-dashboard',
+            'read-contact', 'update-contact', 'send-contact-response', 'mark-contact-read', 'mark-contact-unread', 'bulk-contact-action',
+            'read-project', 'read-service', 'read-product', 'read-testimonial', 'read-team-member', 'read-order',
+            'view-profile', 'update-profile',
             'use-ai-assistant',
         ];
-        $customerServiceRole->givePermissionTo($customerServicePermissions);
+        $customerServiceRole->syncPermissions($customerServicePermissions);
 
-        // Permissions pour l'User basique (accès minimal)
+        $driverPermissions = [
+            'read-delivery', 'validate-delivery',
+            'view-dashboard',
+            'view-profile', 'update-profile',
+        ];
+        $driverRole->syncPermissions($driverPermissions);
+
         $userPermissions = [
             'view-dashboard',
-            'view-profile',
-            'update-profile',
+            'view-profile', 'update-profile',
         ];
-        $userRole->givePermissionTo($userPermissions);
+        $userRole->syncPermissions($userPermissions);
 
-        $this->command->info('Permissions et rôles créés avec succès !');
-        $this->command->info('Rôles créés : Super Admin, Admin, Content Manager, Customer Service, User');
-        $this->command->info('Total permissions : ' . count($permissions));
-        $this->command->info('Permissions basées sur vos contrôleurs existants dans web.php');
+        // Assigner le rôle "Super Admin" au premier utilisateur
+        $firstUser = User::first();
+        if ($firstUser) {
+            $firstUser->syncRoles(['Super Admin']);
+            $this->command->info('Le rôle "Super Admin" a été assigné à l\'utilisateur: ' . $firstUser->name . ' (' . $firstUser->email . ')');
+        } else {
+            $this->command->warn('Aucun utilisateur trouvé dans la base de données. Assurez-vous d\'avoir créé un utilisateur avant de lancer le seeder.');
+        }
+
+        $this->command->info('Permissions et rôles mis à jour et assignés avec succès !');
     }
 }

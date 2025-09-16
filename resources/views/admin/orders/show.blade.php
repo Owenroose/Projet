@@ -87,6 +87,23 @@
     padding: 1.5rem;
 }
 
+.modal-body .status-info {
+    background-color: #f8f9fa;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.modal-body .status-current {
+    font-weight: 600;
+    color: #495057;
+}
+
+.modal-body .status-new {
+    font-weight: 600;
+    color: #198754;
+}
+
 @media print {
     .no-print {
         display: none !important;
@@ -127,26 +144,26 @@
                         <li><h6 class="dropdown-header">Changer le statut</h6></li>
 
                         @if($orderInfo->status !== 'processing')
-                        <li><a class="dropdown-item" href="#" onclick="updateOrderStatus('processing')">
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#processingModal">
                             <i class="bx bx-play text-info"></i> Marquer en cours
                         </a></li>
                         @endif
 
                         @if($orderInfo->status !== 'shipped')
-                        <li><a class="dropdown-item" href="#" onclick="updateOrderStatus('shipped')">
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#shippedModal">
                             <i class="bx bx-package text-warning"></i> Marquer expédiée
                         </a></li>
                         @endif
 
                         @if($orderInfo->status !== 'delivered')
-                        <li><a class="dropdown-item" href="#" onclick="updateOrderStatus('delivered')">
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#deliveredModal">
                             <i class="bx bx-check-circle text-success"></i> Marquer livrée
                         </a></li>
                         @endif
 
                         @if(!in_array($orderInfo->status, ['delivered', 'cancelled']))
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" href="#" onclick="updateOrderStatus('cancelled')">
+                        <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#cancelModal">
                             <i class="bx bx-x"></i> Annuler la commande
                         </a></li>
                         @endif
@@ -401,21 +418,228 @@
         </div>
     </div>
 </div>
+
+<!-- Modal En cours de traitement -->
+<div class="modal fade" id="processingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bx bx-play text-info me-2"></i>
+                    Marquer en cours de traitement
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="status-info">
+                    <div class="mb-2">
+                        <strong>Commande #{{ substr($orderInfo->order_group, 0, 8) }}</strong>
+                    </div>
+                    <div class="mb-2">
+                        Statut actuel : <span class="status-current">
+                            @switch($orderInfo->status)
+                                @case('pending') En attente @break
+                                @case('processing') En cours de traitement @break
+                                @case('shipped') Expédiée @break
+                                @case('delivered') Livrée @break
+                                @case('cancelled') Annulée @break
+                                @default {{ ucfirst($orderInfo->status) }}
+                            @endswitch
+                        </span>
+                    </div>
+                    <div>
+                        Nouveau statut : <span class="status-new">En cours de traitement</span>
+                    </div>
+                </div>
+                <p class="text-muted mb-0">
+                    Cette action indiquera que la commande est maintenant en cours de préparation.
+                    Le client sera notifié de ce changement de statut.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-info" onclick="updateOrderStatus('processing')">
+                    <i class="bx bx-play me-1"></i>
+                    Confirmer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Expédiée -->
+<div class="modal fade" id="shippedModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bx bx-package text-warning me-2"></i>
+                    Marquer comme expédiée
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="status-info">
+                    <div class="mb-2">
+                        <strong>Commande #{{ substr($orderInfo->order_group, 0, 8) }}</strong>
+                    </div>
+                    <div class="mb-2">
+                        Statut actuel : <span class="status-current">
+                            @switch($orderInfo->status)
+                                @case('pending') En attente @break
+                                @case('processing') En cours de traitement @break
+                                @case('shipped') Expédiée @break
+                                @case('delivered') Livrée @break
+                                @case('cancelled') Annulée @break
+                                @default {{ ucfirst($orderInfo->status) }}
+                            @endswitch
+                        </span>
+                    </div>
+                    <div>
+                        Nouveau statut : <span class="status-new">Expédiée</span>
+                    </div>
+                </div>
+                <p class="text-muted mb-0">
+                    Cette action indiquera que la commande a été expédiée et est en route vers le client.
+                    Assurez-vous que tous les produits ont bien été envoyés.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-warning" onclick="updateOrderStatus('shipped')">
+                    <i class="bx bx-package me-1"></i>
+                    Confirmer l'expédition
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Livrée -->
+<div class="modal fade" id="deliveredModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bx bx-check-circle text-success me-2"></i>
+                    Marquer comme livrée
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="status-info">
+                    <div class="mb-2">
+                        <strong>Commande #{{ substr($orderInfo->order_group, 0, 8) }}</strong>
+                    </div>
+                    <div class="mb-2">
+                        Statut actuel : <span class="status-current">
+                            @switch($orderInfo->status)
+                                @case('pending') En attente @break
+                                @case('processing') En cours de traitement @break
+                                @case('shipped') Expédiée @break
+                                @case('delivered') Livrée @break
+                                @case('cancelled') Annulée @break
+                                @default {{ ucfirst($orderInfo->status) }}
+                            @endswitch
+                        </span>
+                    </div>
+                    <div>
+                        Nouveau statut : <span class="status-new">Livrée</span>
+                    </div>
+                </div>
+                <div class="alert alert-success">
+                    <i class="bx bx-info-circle me-2"></i>
+                    <strong>Attention :</strong> Une fois marquée comme livrée, cette commande sera considérée comme terminée.
+                </div>
+                <p class="text-muted mb-0">
+                    Confirmez que la commande a bien été réceptionnée par le client avant de procéder.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-success" onclick="updateOrderStatus('delivered')">
+                    <i class="bx bx-check-circle me-1"></i>
+                    Confirmer la livraison
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Annulation -->
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bx bx-x text-danger me-2"></i>
+                    Annuler la commande
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="status-info">
+                    <div class="mb-2">
+                        <strong>Commande #{{ substr($orderInfo->order_group, 0, 8) }}</strong>
+                    </div>
+                    <div class="mb-2">
+                        Statut actuel : <span class="status-current">
+                            @switch($orderInfo->status)
+                                @case('pending') En attente @break
+                                @case('processing') En cours de traitement @break
+                                @case('shipped') Expédiée @break
+                                @case('delivered') Livrée @break
+                                @case('cancelled') Annulée @break
+                                @default {{ ucfirst($orderInfo->status) }}
+                            @endswitch
+                        </span>
+                    </div>
+                    <div>
+                        Nouveau statut : <span class="text-danger fw-semibold">Annulée</span>
+                    </div>
+                </div>
+                <div class="alert alert-danger">
+                    <i class="bx bx-error-circle me-2"></i>
+                    <strong>Action irréversible :</strong> Cette commande sera définitivement annulée.
+                </div>
+                <p class="text-muted mb-3">
+                    L'annulation de cette commande aura les conséquences suivantes :
+                </p>
+                <ul class="text-muted mb-0">
+                    <li>Le client sera automatiquement notifié</li>
+                    <li>Le stock des produits sera restauré</li>
+                    <li>Le remboursement devra être traité manuellement si nécessaire</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-danger" onclick="updateOrderStatus('cancelled')">
+                    <i class="bx bx-x me-1"></i>
+                    Confirmer l'annulation
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('page-js')
 <script>
 function updateOrderStatus(status) {
-    const statusLabels = {
-        'processing': 'en cours de traitement',
-        'shipped': 'expédiée',
-        'delivered': 'livrée',
-        'cancelled': 'annulée'
-    };
+    // Fermer le modal avant de procéder
+    const modals = ['processingModal', 'shippedModal', 'deliveredModal', 'cancelModal'];
+    modals.forEach(modalId => {
+        const modalElement = document.getElementById(modalId);
+        if (modalElement) {
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) {
+                modal.hide();
+            }
+        }
+    });
 
-    if (!confirm(`Êtes-vous sûr de vouloir marquer cette commande comme ${statusLabels[status]} ?`)) {
-        return;
-    }
+    // Afficher un loader
+    showAlert('Mise à jour en cours...', 'info');
 
     fetch('{{ route("admin.orders.updateStatus") }}', {
         method: 'POST',
@@ -442,21 +666,80 @@ function updateOrderStatus(status) {
 }
 
 function showAlert(message, type = 'info') {
-    const alertContainer = document.querySelector('.container-xxl.flex-grow-1.container-p-y');
+    // Supprimer les anciennes alertes
+    const existingAlerts = document.querySelectorAll('.alert:not(.status-info)');
+    existingAlerts.forEach(alert => {
+        if (!alert.closest('.modal')) {
+            alert.remove();
+        }
+    });
+
+    // Créer l'alerte
     const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
+    alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show mt-3`;
     alertDiv.innerHTML = `
-        <i class="bx bx-${type === 'success' ? 'check' : type === 'error' ? 'error' : 'info'}-circle me-2"></i>
         ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
-    alertContainer.insertBefore(alertDiv, alertContainer.firstChild);
 
+    // Insérer l'alerte
+    const container = document.querySelector('.container') || document.body;
+    container.prepend(alertDiv);
+
+    // Supprimer automatiquement après 3 secondes
     setTimeout(() => {
-        if (alertDiv.parentNode) {
+        if (alertDiv && alertDiv.parentNode) {
             alertDiv.remove();
         }
-    }, 5000);
+    }, 3000);
 }
+
+// Fonctions utilitaires
+function getStatusLabel(status) {
+    const labels = {
+        'pending': 'En attente',
+        'processing': 'En cours de traitement',
+        'shipped': 'Expédiée',
+        'delivered': 'Livrée',
+        'cancelled': 'Annulée'
+    };
+    return labels[status] || status;
+}
+
+function canUpdateToStatus(currentStatus, newStatus) {
+    const validTransitions = {
+        'pending': ['processing', 'cancelled'],
+        'processing': ['shipped', 'cancelled'],
+        'shipped': ['delivered'],
+        'delivered': [],
+        'cancelled': []
+    };
+    return validTransitions[currentStatus]?.includes(newStatus) || false;
+}
+
+function formatDate(dateString) {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleString('fr-FR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+// Gestionnaire global pour les actions de commande
+window.OrderDetailsManager = {
+    updateOrderStatus,
+    showAlert,
+    getStatusLabel,
+    canUpdateToStatus,
+    formatDate
+};
+
+// Initialisation au chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Order Details Manager initialized');
+});
 </script>
 @endsection
